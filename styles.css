@@ -1,5 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
 
+* {
+    font-family: "Montserrat", sans-serif;
+    box-sizing: border-box;
+}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -7,68 +12,69 @@ html, body {
 }
 
 body {
-    height: 100vh;
-    background: linear-gradient(to bottom, #00153b, #41436A 100vh);
-    background-color: #233598;
-    background-repeat: no-repeat; /* Ensures the background does not repeat */
-    background-position: top left; /* Positions the background at the top left */
-    min-height: 100vh; /* Ensures the body is at least 100% of the viewport height */
-    overflow-x: hidden; /* Hide horizontal overflow */
-    overflow-y: auto; /* Allow vertical overflow if needed */
-    flex-wrap: wrap;
+    background-color: #41436A; /* Dark background color */
     display: flex;
     justify-content: center;
+    align-items: center;
 }
-.title{
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #ffffff; /* White background for the container */
+    border-radius: 8px;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+}
+
+.title {
     padding: 20px;
     text-align: center;
-    height: 10vh;
-    color: white;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 80px;
-    flex-basis: 100%;
+    color: #fe9677; /* Accent color for the title */
+    font-size: 2em; /* Adjusted title size */
 }
-.tab-holder{
-    position: relative;
-    width: 40vw;
-    height: 50vh;
+
+.tab-holder {
     display: flex; 
     justify-content: center; 
     align-items: center; 
     flex-wrap: wrap; 
     gap: 5px;
-    box-sizing: border-box;
+    max-width: 40vw;
 }
-.tab:nth-of-type(1){
-    background: url('images/maths.jpeg') no-repeat center;
-    background-size: contain;
-}
-.tab:nth-of-type(2){
-    background: url('images/science.jpeg') no-repeat center;
-    background-size: contain;
-}
-.tab:nth-of-type(3){
-    background: url('images/geography.jpeg') no-repeat center;
-    background-size: contain;
-}
-.tab:nth-of-type(4){
-    background: url('images/computing.jpeg') no-repeat center;
-    background-size: contain;
-}
-.tab:nth-of-type(5){
-    background: url('images/homework.jpeg') no-repeat center;
-    background-size: contain;
-}
-.tab{
+
+.tab {
     width: 160px;
     height: 160px;
     margin: 15px;
     border-radius: 10px;
-    background: url('images/science.jpeg');
-    background-size: contain; 
-    background-repeat: no-repeat;
+    background-size: contain; /* Ensures images cover the tab area */
     transition: transform 0.3s ease;
 }
-.tab:hover{
+/* Image backgrounds for each tab */
+.maths-tab {
+    background: url('images/maths.jpeg') no-repeat center;
+    background-size: contain;
+}
+.science-tab {
+    background: url('images/science.jpeg') no-repeat center;
+    background-size: contain;
+}
+.geography-tab {
+    background: url('images/geography.jpeg') no-repeat center;
+}
+.computing-tab {
+    background: url('images/computing.jpeg') no-repeat center;
+}
+.hwtab {
+    background: url('images/homework.jpeg') no-repeat center;
+}
+
+.tab:hover {
     transform: scale(1.15);
 }

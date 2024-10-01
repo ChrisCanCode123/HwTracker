@@ -1,4 +1,6 @@
 $(document).ready(function() {
+    const now = new Date(); // Get the current date and time
+    const currentHour = now.getHours(); 
     // Firebase configuration
     const firebaseConfig = {
         apiKey: "AIzaSyDbqpqGbhQIz15UlCfR6LgypEsft0eJW4Q",
@@ -78,9 +80,18 @@ $(document).ready(function() {
             });
     }
 
-    // Load schedule for the initially selected day
-    loadSchedule(daySelect.val());
+    // Get the current day (1-5 for Monday to Friday)
+    const currentDate = new Date();
+    const currentDay = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+    weekday = (currentDay === 0) ? 1 : (currentDay === 6) ? 5 : currentDay; // Adjust for Monday to Friday
 
+    // Set the selected value to the current day
+    if(currentHour >= 16) weekday+=1;
+    daySelect.val(weekday);
+    loadSchedule(weekday);
+    // Load schedule for the initially selected day
+    
+    
     // Handle day selection change
     daySelect.on('change', function() {
         loadSchedule($(this).val());
