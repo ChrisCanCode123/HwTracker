@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro PDF Study Tool</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif; }
+        
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        /* Draggable Center Splitter */
+        .resizer {
+            width: 6px;
+            cursor: col-resize;
+            background-color: #e2e8f0;
+            transition: background-color 0.2s;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .resizer:hover, .resizer:active { background-color: #94a3b8; }
+        .dark .resizer { background-color: #334155; }
+        .dark .resizer:hover, .dark .resizer:active { background-color: #64748b; }
+        
+        /* Pan and Zoom Viewports */
+        .viewport {
+            overflow: hidden;
+            position: relative;
+            background-color: #f1f5f9;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+        .viewport:active { cursor: grabbing; }
+        .dark .viewport { background-color: #0f172a; }
+        
+        .canvas-wrapper {
+            position: absolute;
+            transform-origin: top left;
+            will-change: transform;
+        }
+        
+        /* PDF Canvas & Dark Mode Smart Inversion */
+        .pdf-canvas {
+            display: block;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            background-color: white;
+            transition: filter 0.3s ease;
+        }
+        .dark .pdf-canvas {
+            /* Magically turns white PDF pages dark gray and black text white */
+            filter: invert(0.92) hue-rotate(180deg);
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(156, 163, 175, 0.2);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+
+    <!-- Toast Notification Anchor -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Header Navigation -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 flex-shrink-0 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3">
+        
+        <!-- Logo & Library Dropdown -->
+        <div class="flex items-center gap-3 w-full md:w-auto md:min-w-[300px]">
+            <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                Study Pro
+            </h1>
+            
+            <div class="w-px h-6 bg-slate-200 dark:bg-slate-600 mx-1 hidden sm:block"></div>
+            
+            <select id="book-selector" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2 min-w-[150px]">
+                <option value="">Select a book...</option>
+                <!-- Dynamically populated -->
+            </select>
+        </div>
+
+        <!-- Global Search Bar -->
+        <div class="flex-1 w-full max-w-xl mx-auto flex items-center gap-2">
+            <div class="relative w-full">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                </div>
+                <input type="text" id="search-global" placeholder="Global search both views simultaneously..." class="block w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow">
+            </div>
+            <button id="btn-global-search" onclick="executeGlobalSearch()" class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50">
+                Search All
+            </button>
+        </div>
+
+        <!-- Tools & Upload -->
+        <div class="flex items-center gap-2 w-full md:w-auto justify-end md:min-w-[200px]">
+            <input type="file" id="file-upload" accept="application/pdf" class="hidden">
+            <button id="btn-add-book" onclick="document.getElementById('file-upload').click()" class="bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1 border border-indigo-200 dark:border-indigo-800">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+                <span class="hidden sm:inline">Add Book</span>
+            </button>
+            <button id="btn-settings" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Library Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
+            <button id="btn-theme" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Toggle Dark Mode">
+                <svg id="icon-sun" class="h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                <svg id="icon-moon" class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Custom Prompt Modal (Upload Book Name) -->
+    <div id="modal-prompt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Name Your Book</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Enter a clear name for this PDF to identify it in your library.</p>
+            <input type="text" id="prompt-input" class="w-full border border-slate-300 dark:border-slate-600 rounded-lg p-2.5 mb-5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="flex justify-end gap-3">
+                <button id="btn-prompt-cancel" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Cancel</button>
+                <button id="btn-prompt-ok" class="px-4 py-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-colors">Save Book</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal (Delete Book) -->
+    <div id="modal-confirm" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200">
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Delete Book?</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">Are you sure you want to permanently remove this book from your browser's local memory? You will have to upload it again.</p>
+            <div class="flex justify-end gap-3">
+                <button id="btn-confirm-cancel" class="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors">Cancel</button>
+                <button id="btn-confirm-ok" class="px-4 py-2 text-sm font-medium bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-sm transition-colors">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal (Library Manager) -->
+    <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 flex items-center justify-center hidden opacity-0 transition-opacity duration-200">
+        <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200 flex flex-col max-h-[80vh]">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center flex-shrink-0">
+                <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                    Manage Library Settings
+                </h2>
+                <button id="btn-close-settings" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-50 dark:bg-slate-900/50">
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
+                    Configure parameters for each book. Setting an "Answer Start Page" enables strict searches in the back of the book.
+                </p>
+                <div id="settings-book-list" class="flex flex-col gap-3">
+                    <!-- Books populated here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex w-full h-full overflow-hidden relative" id="main-container">
+        
+        <!-- Empty State Overlay -->
+        <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-slate-300 dark:text-slate-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            <h2 class="text-2xl font-bold text-slate-700 dark:text-slate-200 mb-2">Welcome to Study Tool Pro</h2>
+            <p id="empty-state-msg" class="text-slate-500 dark:text-slate-400 mb-8 text-center max-w-md">Your library is currently empty. Click "Add Book" above to securely upload your first PDF textbook.</p>
+            <button onclick="document.getElementById('file-upload').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+                Upload PDF Book
+            </button>
+        </div>
+
+        <!-- Left Pane -->
+        <section id="pane-left" class="flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
+            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
+                <span class="absolute top-2 right-3 text-[10px] font-bold uppercase tracking-wider text-slate-300 dark:text-slate-600 pointer-events-none">Questions View</span>
+                
+                <div class="flex items-center gap-2 pr-28">
+                    <input type="text" id="search-left" placeholder="Search left view..." class="flex-1 px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <button onclick="executeSearch('left')" class="px-3 py-1.5 bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors">Find</button>
+                </div>
+                
+                <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-700 mt-1">
+                    <div class="flex items-center gap-1">
+                        <button onclick="changePage('left', -1)" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300" title="Prev Page">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Pg <input type="number" id="page-left" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            of <span id="total-left" class="ml-1">?</span>
+                        </div>
+                        <button onclick="changePage('left', 1)" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300" title="Next Page">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400 px-2 py-1">
+                            <input type="checkbox" id="answers-only-left" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600">
+                            Answers Only
+                        </label>
+                        <span id="status-left" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
+                        <button onclick="resetZoom('left')" class="flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-xs font-medium transition-colors" title="Fit to Screen">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="viewport-left" class="viewport">
+                <div id="wrapper-left" class="canvas-wrapper">
+                    <canvas id="canvas-left" class="pdf-canvas"></canvas>
+                </div>
+                <div id="loading-left" class="absolute inset-0 flex items-center justify-center bg-slate-100/80 dark:bg-slate-900/80 hidden z-10 backdrop-blur-sm">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Draggable Resizer -->
+        <div id="resizer" class="resizer" title="Drag to resize">
+            <div class="flex flex-col gap-1">
+                <div class="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div class="w-1 h-1 bg-slate-400 rounded-full"></div>
+                <div class="w-1 h-1 bg-slate-400 rounded-full"></div>
+            </div>
+        </div>
+
+        <!-- Right Pane -->
+        <section id="pane-right" class="flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
+            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
+                <span class="absolute top-2 right-3 text-[10px] font-bold uppercase tracking-wider text-slate-300 dark:text-slate-600 pointer-events-none">Answers View</span>
+                
+                <div class="flex items-center gap-2 pr-28">
+                    <input type="text" id="search-right" placeholder="Search right view..." class="flex-1 px-3 py-1.5 text-sm border border-slate-300 dark:border-slate-600 rounded-md bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors">
+                    <button onclick="executeSearch('right')" class="px-3 py-1.5 bg-slate-800 dark:bg-slate-700 hover:bg-slate-700 dark:hover:bg-slate-600 text-white rounded-md text-sm font-medium transition-colors">Find</button>
+                </div>
+                
+                <div class="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-700 mt-1">
+                    <div class="flex items-center gap-1">
+                        <button onclick="changePage('right', -1)" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300" title="Prev Page">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <div class="flex items-center text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Pg <input type="number" id="page-right" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            of <span id="total-right" class="ml-1">?</span>
+                        </div>
+                        <button onclick="changePage('right', 1)" class="p-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300" title="Next Page">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
+                            <!-- Answers only strictly checked by default here -->
+                            <input type="checkbox" id="answers-only-right" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-700" checked>
+                            Answers Only
+                        </label>
+                        <span id="status-right" class="text-xs font-semibold text-slate-500"></span>
+                        <button onclick="resetZoom('right')" class="flex items-center gap-1 px-2 py-1 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded text-xs font-medium transition-colors" title="Fit to Screen">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="viewport-right" class="viewport">
+                <div id="wrapper-right" class="canvas-wrapper">
+                    <canvas id="canvas-right" class="pdf-canvas"></canvas>
+                </div>
+                <div id="loading-right" class="absolute inset-0 flex items-center justify-center bg-slate-100/80 dark:bg-slate-900/80 hidden z-10 backdrop-blur-sm">
+                    <div class="loader"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // Configure PDF.js Worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        /* --- STREAMING_CHUNK:Initializing state and utility functions... --- */
+
+        let db;
+        let currentBookId = null;
+        let pdfDoc = null;
+        let totalPages = 0;
+        
+        // Dark mode defaults to true on initial load unless explicitly set false
+        let storedMode = localStorage.getItem('studyToolDarkMode');
+        let isDarkMode = storedMode === null ? true : storedMode === 'true';
+
+        // Custom Modals Callbacks
+        let promptCallback = null;
+        let confirmCallback = null;
+
+        const panes = {
+            left: {
+                pageNum: 1, 
+                pageRendering: false, 
+                pageNumPending: null,
+                scale: 1, x: 0, y: 0,
+                isDragging: false, startX: 0, startY: 0,
+                viewport: document.getElementById('viewport-left'),
+                wrapper: document.getElementById('wrapper-left'),
+                canvas: document.getElementById('canvas-left'),
+                ctx: document.getElementById('canvas-left').getContext('2d'),
+                renderScale: 2.5
+            },
+            right: {
+                pageNum: 1, 
+                pageRendering: false,
+                pageNumPending: null,
+                scale: 1, x: 0, y: 0,
+                isDragging: false, startX: 0, startY: 0,
+                viewport: document.getElementById('viewport-right'),
+                wrapper: document.getElementById('wrapper-right'),
+                canvas: document.getElementById('canvas-right'),
+                ctx: document.getElementById('canvas-right').getContext('2d'),
+                renderScale: 2.5
+            }
+        };
+
+        /* --- Custom Modals & Toasts (Replacing alerts/prompts) --- */
+        
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = type === 'error' ? 'bg-red-600' : 'bg-slate-800 dark:bg-blue-600';
+            
+            toast.className = `${bgClass} text-white px-4 py-3 rounded-lg shadow-xl font-medium text-sm transform translate-y-10 opacity-0 transition-all duration-300 pointer-events-auto flex items-center gap-2`;
+            
+            const icon = type === 'error' 
+                ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`
+                : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+            
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            // Trigger animation
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            });
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function customPrompt(defaultValue, callback) {
+            const modal = document.getElementById('modal-prompt');
+            const input = document.getElementById('prompt-input');
+            input.value = defaultValue;
+            promptCallback = callback;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+                input.focus();
+                input.select();
+            }, 10);
+        }
+
+        document.getElementById('btn-prompt-cancel').addEventListener('click', () => {
+            closeModal('modal-prompt');
+            if (promptCallback) promptCallback(null);
+        });
+
+        document.getElementById('btn-prompt-ok').addEventListener('click', () => {
+            const val = document.getElementById('prompt-input').value;
+            closeModal('modal-prompt');
+            if (promptCallback) promptCallback(val);
+        });
+
+        function customConfirm(callback) {
+            const modal = document.getElementById('modal-confirm');
+            confirmCallback = callback;
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.firstElementChild.classList.remove('scale-95');
+            }, 10);
+        }
+
+        document.getElementById('btn-confirm-cancel').addEventListener('click', () => {
+            closeModal('modal-confirm');
+            if (confirmCallback) confirmCallback(false);
+        });
+
+        document.getElementById('btn-confirm-ok').addEventListener('click', () => {
+            closeModal('modal-confirm');
+            if (confirmCallback) confirmCallback(true);
+        });
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.add('opacity-0');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        /* --- STREAMING_CHUNK:Configuring the IndexedDB storage... --- */
+
+        const DB_NAME = 'PDFStudyLibrary';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'books';
+
+        async function initDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onerror = () => reject("DB Error");
+                req.onupgradeneeded = (e) => {
+                    if (!e.target.result.objectStoreNames.contains(STORE_NAME)) {
+                        e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                req.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve();
+                };
+            });
+        }
+
+        function getBooks() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_NAME], "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject();
+            });
+        }
+
+        function saveBook(book) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_NAME], "readwrite");
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.put(book);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject();
+            });
+        }
+
+        function deleteBookDB(id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction([STORE_NAME], "readwrite");
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.delete(id);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject();
+            });
+        }
+
+        /* --- STREAMING_CHUNK:Setting up core UI logic... --- */
+        
+        function applyTheme() {
+            if (isDarkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('icon-moon').classList.add('hidden');
+                document.getElementById('icon-sun').classList.remove('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('icon-moon').classList.remove('hidden');
+                document.getElementById('icon-sun').classList.add('hidden');
+            }
+            localStorage.setItem('studyToolDarkMode', isDarkMode);
+        }
+        
+        document.getElementById('btn-theme').addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            applyTheme();
+        });
+
+        function toggleEmptyState(show, isCompletelyEmpty = false) {
+            const overlay = document.getElementById('empty-state-overlay');
+            const msgEl = document.getElementById('empty-state-msg');
+            const searchGlobal = document.getElementById('search-global');
+            const btnGlobalSearch = document.getElementById('btn-global-search');
+
+            if (show) {
+                overlay.classList.remove('hidden');
+                searchGlobal.disabled = true;
+                btnGlobalSearch.disabled = true;
+                if (isCompletelyEmpty) {
+                    msgEl.textContent = "Your library is currently empty. Click 'Add Book' above to securely upload your first PDF textbook.";
+                } else {
+                    msgEl.textContent = "Please select a book from the dropdown above to begin studying.";
+                }
+            } else {
+                overlay.classList.add('hidden');
+                searchGlobal.disabled = false;
+                btnGlobalSearch.disabled = false;
+            }
+        }
+
+        // Splitter Drag Logic
+        const resizer = document.getElementById('resizer');
+        const paneLeft = document.getElementById('pane-left');
+        const paneRight = document.getElementById('pane-right');
+        const mainContainer = document.getElementById('main-container');
+        let isResizing = false;
+
+        resizer.addEventListener('mousedown', () => {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            panes.left.wrapper.style.pointerEvents = 'none';
+            panes.right.wrapper.style.pointerEvents = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            const containerWidth = mainContainer.offsetWidth;
+            let percent = (e.clientX / containerWidth) * 100;
+            if (percent < 10) percent = 10;
+            if (percent > 90) percent = 90;
+            
+            paneLeft.style.width = `${percent}%`;
+            paneRight.style.width = `${100 - percent}%`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                document.body.style.cursor = '';
+                panes.left.wrapper.style.pointerEvents = '';
+                panes.right.wrapper.style.pointerEvents = '';
+            }
+        });
+
+        /* --- STREAMING_CHUNK:Managing library and uploads... --- */
+
+        async function refreshDropdown() {
+            const select = document.getElementById('book-selector');
+            const books = await getBooks();
+            
+            select.innerHTML = '<option value="">Select a book...</option>';
+            
+            books.forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b.id;
+                opt.textContent = b.name;
+                if (b.id === currentBookId) opt.selected = true;
+                select.appendChild(opt);
+            });
+            return books;
+        }
+
+        document.getElementById('book-selector').addEventListener('change', async (e) => {
+            const id = e.target.value;
+            if (!id) {
+                currentBookId = null;
+                pdfDoc = null;
+                clearCanvases();
+                toggleEmptyState(true, false);
+                return;
+            }
+            await loadBookToView(id);
+        });
+
+        document.getElementById('file-upload').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file || file.type !== "application/pdf") {
+                showToast("Please select a valid PDF file.", "error");
+                return;
+            }
+
+            customPrompt(file.name.replace('.pdf', ''), async (bookName) => {
+                if (!bookName || !bookName.trim()) {
+                    e.target.value = '';
+                    return; 
+                }
+
+                // Generates a consistent ID based on the slugified name to prevent duplicates
+                const safeSlug = bookName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const bookId = 'book_' + safeSlug;
+
+                try {
+                    const buffer = await file.arrayBuffer();
+                    const newBook = {
+                        id: bookId,
+                        name: bookName.trim(),
+                        pdfData: buffer,
+                        answerStartPage: 1
+                    };
+                    
+                    await saveBook(newBook);
+                    showToast("Book saved securely to browser memory.");
+                    
+                    await refreshDropdown();
+                    document.getElementById('book-selector').value = bookId;
+                    await loadBookToView(bookId);
+                } catch (err) {
+                    console.error(err);
+                    showToast("Failed to process the book.", "error");
+                }
+                e.target.value = ''; 
+            });
+        });
+
+        /* --- STREAMING_CHUNK:Handling Canvas Pan & Zoom... --- */
+        
+        function applyTransform(paneId) {
+            const pane = panes[paneId];
+            pane.wrapper.style.transform = `translate(${pane.x}px, ${pane.y}px) scale(${pane.scale})`;
+        }
+
+        function resetZoom(paneId) {
+            const pane = panes[paneId];
+            if (!pane.canvas.width) return;
+
+            const padding = 40;
+            const viewWidth = pane.viewport.clientWidth;
+            const fitScale = (viewWidth - padding) / pane.canvas.width;
+            
+            pane.scale = fitScale;
+            pane.x = (viewWidth - (pane.canvas.width * fitScale)) / 2;
+            pane.y = 20; 
+            
+            applyTransform(paneId);
+        }
+
+        function setupPanZoom(paneId) {
+            const pane = panes[paneId];
+            
+            pane.viewport.addEventListener('wheel', (e) => {
+                if (!pdfDoc) return;
+                e.preventDefault();
+                
+                const rect = pane.viewport.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+
+                const targetX = (mouseX - pane.x) / pane.scale;
+                const targetY = (mouseY - pane.y) / pane.scale;
+
+                const zoomFactor = 0.002;
+                const delta = -e.deltaY * zoomFactor;
+                let newScale = pane.scale * (1 + delta);
+                
+                if (newScale < 0.1) newScale = 0.1;
+                if (newScale > 5.0) newScale = 5.0;
+
+                pane.scale = newScale;
+                pane.x = mouseX - (targetX * pane.scale);
+                pane.y = mouseY - (targetY * pane.scale);
+                
+                applyTransform(paneId);
+            }, { passive: false });
+
+            pane.viewport.addEventListener('mousedown', (e) => {
+                if (!pdfDoc || e.button !== 0) return;
+                pane.isDragging = true;
+                pane.startX = e.clientX - pane.x;
+                pane.startY = e.clientY - pane.y;
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (!pane.isDragging) return;
+                pane.x = e.clientX - pane.startX;
+                pane.y = e.clientY - pane.startY;
+                applyTransform(paneId);
+            });
+
+            const stopDrag = () => { pane.isDragging = false; };
+            window.addEventListener('mouseup', stopDrag);
+            pane.viewport.addEventListener('mouseleave', stopDrag);
+        }
+
+        setupPanZoom('left');
+        setupPanZoom('right');
+
+        /* --- STREAMING_CHUNK:Building robust PDF rendering queue... --- */
+
+        function clearCanvases() {
+            ['left', 'right'].forEach(id => {
+                panes[id].ctx.clearRect(0, 0, panes[id].canvas.width, panes[id].canvas.height);
+                document.getElementById(`total-${id}`).textContent = '?';
+                document.getElementById(`page-${id}`).value = 1;
+            });
+        }
+
+        async function loadBookToView(id) {
+            currentBookId = id;
+            const books = await getBooks();
+            const book = books.find(b => b.id === id);
+            if (!book) return;
+
+            toggleEmptyState(false);
+            document.getElementById('loading-left').classList.remove('hidden');
+            document.getElementById('loading-right').classList.remove('hidden');
+
+            try {
+                const loadingTask = pdfjsLib.getDocument({ data: book.pdfData });
+                pdfDoc = await loadingTask.promise;
+                totalPages = pdfDoc.numPages;
+
+                ['left', 'right'].forEach(paneId => {
+                    document.getElementById(`total-${paneId}`).textContent = totalPages;
+                    document.getElementById(`page-${paneId}`).max = totalPages;
+                });
+
+                // Clear previous pending renders and render fresh
+                panes.left.pageNumPending = null;
+                panes.right.pageNumPending = null;
+                renderPage('left', 1);
+                renderPage('right', 1);
+
+            } catch (err) {
+                console.error(err);
+                showToast("Failed to decode PDF data.", "error");
+            }
+        }
+
+        // Render Page securely resolving the fast-clicking blank page bug
+        async function renderPage(paneId, num) {
+            if (!pdfDoc) return;
+            const pane = panes[paneId];
+            
+            if (num < 1) num = 1;
+            if (num > totalPages) num = totalPages;
+            
+            if (pane.pageRendering) {
+                pane.pageNumPending = num;
+                return;
+            }
+            
+            pane.pageRendering = true;
+            document.getElementById(`loading-${paneId}`).classList.remove('hidden');
+            
+            try {
+                const page = await pdfDoc.getPage(num);
+                const viewport = page.getViewport({ scale: pane.renderScale });
+                
+                pane.canvas.height = viewport.height;
+                pane.canvas.width = viewport.width;
+
+                const renderContext = {
+                    canvasContext: pane.ctx,
+                    viewport: viewport
+                };
+                
+                await page.render(renderContext).promise;
+                
+                pane.pageNum = num;
+                document.getElementById(`page-${paneId}`).value = num;
+                resetZoom(paneId); 
+                
+            } catch (err) {
+                console.error("Page Render Error:", err);
+            } finally {
+                pane.pageRendering = false;
+                document.getElementById(`loading-${paneId}`).classList.add('hidden');
+                
+                if (pane.pageNumPending !== null) {
+                    const nextNum = pane.pageNumPending;
+                    pane.pageNumPending = null;
+                    renderPage(paneId, nextNum);
+                }
+            }
+        }
+
+        function changePage(paneId, offset) {
+            const current = panes[paneId].pageNum;
+            let next = current + offset;
+            if (next >= 1 && next <= totalPages) {
+                renderPage(paneId, next);
+            }
+        }
+
+        ['left', 'right'].forEach(paneId => {
+            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => {
+                const val = parseInt(e.target.value);
+                if (!isNaN(val)) renderPage(paneId, val);
+            });
+        });
+
+        /* --- STREAMING_CHUNK:Executing Global and Local Searches... --- */
+        
+        async function executeGlobalSearch() {
+            const query = document.getElementById('search-global').value.trim();
+            if (!query || !pdfDoc) return;
+
+            document.getElementById('search-left').value = query;
+            document.getElementById('search-right').value = query;
+
+            document.getElementById('btn-global-search').disabled = true;
+            document.getElementById('search-global').disabled = true;
+
+            try {
+                await Promise.all([
+                    executeSearch('left', query),
+                    executeSearch('right', query)
+                ]);
+            } finally {
+                document.getElementById('btn-global-search').disabled = false;
+                document.getElementById('search-global').disabled = false;
+            }
+        }
+
+        document.getElementById('search-global').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeGlobalSearch();
+        });
+
+        async function executeSearch(paneId, overrideQuery = null) {
+            if (!pdfDoc || !currentBookId) return;
+            
+            const query = (overrideQuery !== null ? overrideQuery : document.getElementById(`search-${paneId}`).value).trim().toLowerCase();
+            const statusEl = document.getElementById(`status-${paneId}`);
+            
+            if (!query) {
+                statusEl.textContent = "";
+                return;
+            }
+
+            statusEl.textContent = "Scanning...";
+            
+            let startPage = 1;
+            
+            const answersOnlyCheckbox = document.getElementById(`answers-only-${paneId}`);
+            if (answersOnlyCheckbox && answersOnlyCheckbox.checked) {
+                const books = await getBooks();
+                const book = books.find(b => b.id === currentBookId);
+                if (book && book.answerStartPage > 1) {
+                    startPage = Math.min(book.answerStartPage, totalPages);
+                }
+            }
+
+            try {
+                for (let i = startPage; i <= totalPages; i++) {
+                    const page = await pdfDoc.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const text = textContent.items.map(item => item.str).join(' ').toLowerCase();
+                    
+                    if (text.includes(query)) {
+                        statusEl.textContent = `Found (Pg ${i})`;
+                        renderPage(paneId, i);
+                        return; 
+                    }
+                    if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); // Non-blocking yield
+                }
+                statusEl.textContent = "Not found.";
+            } catch (err) {
+                console.error(err);
+                statusEl.textContent = "Error.";
+            }
+        }
+
+        ['left', 'right'].forEach(paneId => {
+            document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') executeSearch(paneId);
+            });
+        });
+
+        /* --- STREAMING_CHUNK:Constructing the Settings Modal completely isolated from bugs... --- */
+
+        const modalSettings = document.getElementById('modal-settings');
+        const settingsList = document.getElementById('settings-book-list');
+
+        async function populateSettings() {
+            // EXPLICIT CLEAR TO PREVENT DUPLICATES (The core bug fix)
+            settingsList.innerHTML = '';
+            
+            const books = await getBooks();
+            
+            if (books.length === 0) {
+                settingsList.innerHTML = '<p class="text-slate-500 italic text-sm">No books in library. Add a book first.</p>';
+                return;
+            }
+
+            books.forEach(book => {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm";
+                
+                row.innerHTML = `
+                    <div class="flex-1 mr-4 overflow-hidden">
+                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate" title="${book.name}">${book.name}</h3>
+                        <div class="flex items-center gap-2 mt-2">
+                            <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Answers Start Pg:</label>
+                            <input type="number" min="1" id="input-ans-${book.id}" value="${book.answerStartPage || 1}" class="w-20 px-2 py-1 text-xs border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 flex-shrink-0">
+                        <button onclick="saveBookSettings('${book.id}')" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 text-blue-700 dark:text-blue-300 rounded text-xs font-semibold transition-colors">Save</button>
+                        <button onclick="deleteBookAction('${book.id}')" class="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-800/60 text-red-700 dark:text-red-300 rounded text-xs font-semibold transition-colors">Delete</button>
+                    </div>
+                `;
+                settingsList.appendChild(row);
+            });
+        }
+
+        window.saveBookSettings = async (id) => {
+            const input = document.getElementById(`input-ans-${id}`);
+            const val = parseInt(input.value);
+            if (isNaN(val) || val < 1) return;
+
+            const books = await getBooks();
+            const book = books.find(b => b.id === id);
+            if (book) {
+                book.answerStartPage = val;
+                await saveBook(book);
+                
+                const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button');
+                const origText = btn.textContent;
+                btn.textContent = "Saved!";
+                btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
+                setTimeout(() => {
+                    btn.textContent = origText;
+                    btn.classList.remove("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
+                }, 1500);
+            }
+        };
+
+        window.deleteBookAction = (id) => {
+            customConfirm(async (confirmed) => {
+                if (confirmed) {
+                    await deleteBookDB(id);
+                    if (currentBookId === id) {
+                        currentBookId = null;
+                        pdfDoc = null;
+                        clearCanvases();
+                    }
+                    const remainingBooks = await refreshDropdown();
+                    if (remainingBooks.length === 0) {
+                        toggleEmptyState(true, true);
+                    } else if (!currentBookId) {
+                        toggleEmptyState(true, false);
+                    }
+                    await populateSettings();
+                    showToast("Book removed from library.");
+                }
+            });
+        };
+
+        document.getElementById('btn-settings').addEventListener('click', async () => {
+            await populateSettings(); // Will explicitly clear before population
+            modalSettings.classList.remove('hidden');
+            setTimeout(() => {
+                modalSettings.classList.remove('opacity-0');
+                modalSettings.firstElementChild.classList.remove('scale-95');
+            }, 10);
+        });
+
+        document.getElementById('btn-close-settings').addEventListener('click', () => {
+            closeModal('modal-settings');
+        });
+
+        /* --- STREAMING_CHUNK:Finalizing initialization logic... --- */
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            applyTheme();
+            try {
+                await initDB();
+                const books = await refreshDropdown();
+                
+                if (books.length > 0) {
+                    toggleEmptyState(true, false); 
+                } else {
+                    toggleEmptyState(true, true);
+                }
+
+            } catch (err) {
+                console.error("Init Error:", err);
+                showToast("Failed to initialize database.", "error");
+            }
+            
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    if (pdfDoc) {
+                        resetZoom('left');
+                        resetZoom('right');
+                    }
+                }, 150);
+            });
+        });
+    </script>
+</body>
+</html>
