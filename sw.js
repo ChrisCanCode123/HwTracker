@@ -1,35 +1,55 @@
-const CACHE_NAME = 'study-pro-offline-v1';
+const CACHE_NAME = 'study-pro-offline-v2';
 
-// These are the files and external links the app needs to run without internet
-const ASSETS_TO_CACHE = [
+// Only cache the guaranteed local files upfront
+const LOCAL_ASSETS = [
     './',
     './index.html',
     './manifest.json',
-    './icon.png',
-    'https://cdn.tailwindcss.com',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
-    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+    './icon.png'
 ];
 
-// Install step: Download everything into the offline cache
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS_TO_CACHE);
+            return cache.addAll(LOCAL_ASSETS);
         })
     );
+    self.skipWaiting();
 });
 
-// Fetch step: Whenever the app asks for a file, check the offline cache first
+self.addEventListener('activate', (event) => {
+    event.waitUntil(self.clients.claim());
+});
+
+// Dynamically cache external links (Tailwind, PDF.js, Fonts) as they are requested
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            // Return the cached offline version if we have it, otherwise try the internet
-            return cachedResponse || fetch(event.request);
-        }).catch(() => {
-            // Failsafe: if offline and not in cache, do nothing to prevent crashing
-            return new Response();
+            // Return cached version if we have it
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            
+            // Otherwise, fetch from network, cache it for next time, and return it
+            return fetch(event.request).then((networkResponse) => {
+                // Don't cache bad responses, but DO cache opaque (CDN) responses
+                if (!networkResponse || (networkResponse.status !== 200 && networkResponse.type !== 'opaque')) {
+                    return networkResponse;
+                }
+                
+                let responseToCache = networkResponse.clone();
+                caches.open(CACHE_NAME).then((cache) => {
+                    // Only cache HTTP/HTTPS requests (ignores browser extensions/file protocols)
+                    if (event.request.url.startsWith('http')) {
+                        cache.put(event.request, responseToCache);
+                    }
+                });
+                
+                return networkResponse;
+            }).catch(() => {
+                // Failsafe for when offline and file isn't in cache
+                return new Response('', { status: 408, statusText: 'Request timed out.' });
+            });
         })
     );
 });
