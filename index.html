@@ -22,98 +22,54 @@
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                }
-            }
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
         }
     </script>
     
     <style>
         body { margin: 0; padding: 0; overflow: hidden; font-family: 'Inter', sans-serif; touch-action: none; }
         
-        /* Custom Scrollbars */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .dark ::-webkit-scrollbar-thumb { background: #475569; }
         
-        /* Draggable Center Splitter */
         .resizer {
-            width: 6px;
-            cursor: col-resize;
-            background-color: #e2e8f0;
-            transition: background-color 0.2s;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 6px; cursor: col-resize; background-color: #e2e8f0; transition: background-color 0.2s;
+            z-index: 20; display: flex; align-items: center; justify-content: center;
         }
         .resizer:hover, .resizer:active { background-color: #94a3b8; }
         .dark .resizer { background-color: #334155; }
         .dark .resizer:hover, .dark .resizer:active { background-color: #64748b; }
         
-        /* Pan and Zoom Viewports */
-        .viewport {
-            overflow: hidden;
-            position: relative;
-            background-color: #f1f5f9;
-            width: 100%;
-            height: 100%;
-            cursor: grab;
-        }
+        .viewport { overflow: hidden; position: relative; background-color: #f1f5f9; width: 100%; height: 100%; cursor: grab; }
         .viewport:active { cursor: grabbing; }
         .dark .viewport { background-color: #0f172a; }
         
-        .canvas-wrapper {
-            position: absolute;
-            transform-origin: top left;
-            will-change: transform;
-            transition: transform 0.1s ease-out;
-        }
+        .canvas-wrapper { position: absolute; transform-origin: top left; will-change: transform; transition: transform 0.1s ease-out; }
         .canvas-wrapper.is-dragging { transition: none; }
         
-        /* PDF Canvas */
-        .pdf-canvas {
-            display: block;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-            background-color: white;
-            transition: filter 0.3s ease;
-        }
+        .pdf-canvas { display: block; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); background-color: white; transition: filter 0.3s ease; }
         .dark .pdf-canvas { filter: invert(0.92) hue-rotate(180deg); }
 
-        /* Loading Spinner */
-        .loader {
-            border: 3px solid rgba(156, 163, 175, 0.2);
-            border-top: 3px solid #3b82f6;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            animation: spin 1s linear infinite;
-        }
+        .loader { border: 3px solid rgba(156, 163, 175, 0.2); border-top: 3px solid #3b82f6; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         /* Mobile Single View Utility Classes */
         .single-view-mode #resizer { display: none !important; }
         .single-view-mode .pane { width: 100% !important; }
-        
         .single-view-mode.show-left #pane-right { display: none !important; }
         .single-view-mode.show-left #pane-left { display: flex !important; }
-        
         .single-view-mode.show-right #pane-left { display: none !important; }
         .single-view-mode.show-right #pane-right { display: flex !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
-    <!-- Toast Notification Anchor -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
     <!-- Header Navigation -->
     <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 flex-shrink-0 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3 relative">
-        
-        <!-- Top row for mobile -->
         <div class="flex items-center justify-between w-full md:w-auto">
             <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
@@ -124,9 +80,7 @@
             </button>
         </div>
 
-        <!-- Main Header Controls -->
         <div id="header-controls" class="hidden md:flex flex-col md:flex-row items-center gap-3 w-full w-full justify-between">
-            
             <select id="book-selector" class="w-full md:w-auto flex-shrink-0 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 min-w-[150px]">
                 <option value="">Select a book...</option>
             </select>
@@ -259,11 +213,18 @@
         <!-- Left Pane (Questions) -->
         <section id="pane-left" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700" style="width: 50%;">
             <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions View</span>
-                    <input type="text" id="search-left" placeholder="Search questions..." class="flex-1 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-                    <button onclick="executeSearch('left')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium">Find</button>
+                
+                <div class="flex items-center gap-2 w-full">
+                    <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
+                    <div class="flex-1 relative flex items-center gap-1">
+                        <!-- Dynamic Search Area -->
+                        <input type="text" id="search-left" placeholder="Search..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
+                        <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
+                        <button id="btn-search-left" onclick="executeSearchAll('left')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
+                        <button id="btn-clear-left" onclick="clearSearch('left')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded text-sm font-bold flex-shrink-0 transition-colors">&times;</button>
+                    </div>
                 </div>
+
                 <div class="flex items-center justify-between mt-1">
                     <div class="flex items-center gap-1">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -276,7 +237,7 @@
                             <input type="checkbox" id="answers-only-left" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600">
                             Answers Only
                         </label>
-                        <span id="status-left" class="text-xs font-semibold text-blue-600 dark:text-blue-400 hidden sm:inline"></span>
+                        <span id="status-left" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
                         <button onclick="resetZoom('left')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded" title="Fit to Screen">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                         </button>
@@ -308,11 +269,18 @@
         <!-- Right Pane (Answers) -->
         <section id="pane-right" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
             <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers View</span>
-                    <input type="text" id="search-right" placeholder="Search answers..." class="flex-1 px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-                    <button onclick="executeSearch('right')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium">Find</button>
+                
+                <div class="flex items-center gap-2 w-full">
+                    <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers</span>
+                    <div class="flex-1 relative flex items-center gap-1">
+                        <!-- Dynamic Search Area -->
+                        <input type="text" id="search-right" placeholder="Search..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
+                        <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
+                        <button id="btn-search-right" onclick="executeSearchAll('right')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
+                        <button id="btn-clear-right" onclick="clearSearch('right')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded text-sm font-bold flex-shrink-0 transition-colors">&times;</button>
+                    </div>
                 </div>
+
                 <div class="flex items-center justify-between mt-1">
                     <div class="flex items-center gap-1">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -325,7 +293,7 @@
                             <input type="checkbox" id="answers-only-right" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-700" checked>
                             Answers Only
                         </label>
-                        <span id="status-right" class="text-xs font-semibold text-slate-500 hidden sm:inline"></span>
+                        <span id="status-right" class="text-xs font-semibold text-slate-500"></span>
                         <button onclick="resetZoom('right')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded" title="Fit to Screen">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                         </button>
@@ -383,8 +351,8 @@
         }
 
         const panes = {
-            left: { pageNum: 1, pageRendering: false, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-left'), wrapper: document.getElementById('wrapper-left'), canvas: document.getElementById('canvas-left'), ctx: document.getElementById('canvas-left').getContext('2d'), renderScale: 2.5, lastSearchQuery: '', lastSearchPage: 0 },
-            right: { pageNum: 1, pageRendering: false, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-right'), wrapper: document.getElementById('wrapper-right'), canvas: document.getElementById('canvas-right'), ctx: document.getElementById('canvas-right').getContext('2d'), renderScale: 2.5, lastSearchQuery: '', lastSearchPage: 0 }
+            left: { pageNum: 1, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-left'), wrapper: document.getElementById('wrapper-left'), canvas: document.getElementById('canvas-left'), ctx: document.getElementById('canvas-left').getContext('2d'), renderScale: 2.5 },
+            right: { pageNum: 1, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-right'), wrapper: document.getElementById('wrapper-right'), canvas: document.getElementById('canvas-right'), ctx: document.getElementById('canvas-right').getContext('2d'), renderScale: 2.5 }
         };
 
         /* --- Layout & Themes --- */
@@ -402,7 +370,7 @@
             }
         }
 
-        function applyLayout() {
+        async function applyLayout() {
             const container = document.getElementById('main-container');
             const tabBar = document.getElementById('mobile-tab-bar');
             const isMobile = window.innerWidth < 768;
@@ -425,10 +393,9 @@
             }
             
             if (pdfDoc) {
-                setTimeout(() => {
-                    renderPage('left', panes.left.pageNum, appSettings.defaultZoom);
-                    renderPage('right', panes.right.pageNum, appSettings.defaultZoom);
-                }, 50);
+                // Await sequentially to prevent canvas crashing on resize
+                await renderPage('left', panes.left.pageNum, appSettings.defaultZoom);
+                await renderPage('right', panes.right.pageNum, appSettings.defaultZoom);
             }
         }
 
@@ -691,6 +658,7 @@
             ['left', 'right'].forEach(id => {
                 panes[id].ctx.clearRect(0, 0, panes[id].canvas.width, panes[id].canvas.height);
                 document.getElementById(`total-${id}`).textContent = '?'; document.getElementById(`page-${id}`).value = 1;
+                clearSearch(id);
             });
         }
 
@@ -709,14 +677,18 @@
                 ['left', 'right'].forEach(paneId => {
                     document.getElementById(`total-${paneId}`).textContent = totalPages;
                     document.getElementById(`page-${paneId}`).max = totalPages;
-                    panes[paneId].lastSearchQuery = ''; panes[paneId].lastSearchPage = 0;
+                    clearSearch(paneId);
                 });
 
                 panes.left.pageNumPending = null; panes.right.pageNumPending = null;
+                if(panes.left.renderTask) panes.left.renderTask.cancel();
+                if(panes.right.renderTask) panes.right.renderTask.cancel();
+
                 const ansPage = book.answerStartPage && book.answerStartPage > 1 ? book.answerStartPage : 1;
                 
-                renderPage('left', 1, appSettings.defaultZoom);
-                renderPage('right', ansPage, appSettings.defaultZoom);
+                // BULLETPROOF RACE CONDITION FIX: Load pages sequentially, never parallel on load
+                await renderPage('left', 1, appSettings.defaultZoom);
+                await renderPage('right', ansPage, appSettings.defaultZoom);
 
                 if (window.innerWidth < 768 || appSettings.forceSingleView) switchMobileTab('left');
 
@@ -727,7 +699,14 @@
             if (!pdfDoc) return;
             const pane = panes[paneId];
             if (num < 1) num = 1; if (num > totalPages) num = totalPages;
-            if (pane.pageRendering) { pane.pageNumPending = num; pane.zoomModePending = zoomMode; return; }
+            
+            // If already rendering, queue the next request and cancel the current one to speed it up
+            if (pane.pageRendering) { 
+                pane.pageNumPending = num; 
+                pane.zoomModePending = zoomMode; 
+                if (pane.renderTask) pane.renderTask.cancel();
+                return; 
+            }
             
             pane.pageRendering = true; document.getElementById(`loading-${paneId}`).classList.remove('hidden');
             
@@ -735,7 +714,11 @@
                 const page = await pdfDoc.getPage(num);
                 const viewport = page.getViewport({ scale: pane.renderScale });
                 pane.canvas.height = viewport.height; pane.canvas.width = viewport.width;
-                await page.render({ canvasContext: pane.ctx, viewport: viewport }).promise;
+                
+                const renderContext = { canvasContext: pane.ctx, viewport: viewport };
+                pane.renderTask = page.render(renderContext);
+                
+                await pane.renderTask.promise;
                 
                 pane.pageNum = num; document.getElementById(`page-${paneId}`).value = num;
                 
@@ -752,9 +735,15 @@
                     applyTransform(paneId); pane.searchTarget = null;
                 } else if (zoomMode === 'width') zoomToWidth(paneId);
                 else resetZoom(paneId);
-            } catch (err) { console.error("Render Error:", err); } 
+            } catch (err) { 
+                // Ignore cancellation errors gracefully
+                if (err.name !== 'RenderingCancelledException') console.error("Render Error:", err); 
+            } 
             finally {
-                pane.pageRendering = false; document.getElementById(`loading-${paneId}`).classList.add('hidden');
+                pane.pageRendering = false; 
+                pane.renderTask = null;
+                document.getElementById(`loading-${paneId}`).classList.add('hidden');
+                
                 if (pane.pageNumPending !== null) {
                     const nextNum = pane.pageNumPending, nextZoom = pane.zoomModePending || appSettings.defaultZoom;
                     pane.pageNumPending = null; pane.zoomModePending = null; renderPage(paneId, nextNum, nextZoom);
@@ -773,25 +762,37 @@
             });
         });
 
-        /* --- Searching --- */
+        /* --- New "Find All" Search Engine --- */
         async function executeGlobalSearch() {
             const query = document.getElementById('search-global').value.trim();
             if (!query || !pdfDoc) return;
             document.getElementById('search-left').value = query; document.getElementById('search-right').value = query;
             document.getElementById('btn-global-search').disabled = true; document.getElementById('search-global').disabled = true;
-            try { await Promise.all([executeSearch('left', query), executeSearch('right', query)]); } 
+            try { 
+                // Await sequentially to avoid crashing pdf.js text extractor
+                await executeSearchAll('left', query); 
+                await executeSearchAll('right', query); 
+            } 
             finally { document.getElementById('btn-global-search').disabled = false; document.getElementById('search-global').disabled = false; }
         }
         document.getElementById('search-global').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeGlobalSearch(); });
 
-        async function executeSearch(paneId, overrideQuery = null) {
+        async function executeSearchAll(paneId, overrideQuery = null) {
             if (!pdfDoc || !currentBookId) return;
             const pane = panes[paneId];
-            const rawQuery = (overrideQuery !== null ? overrideQuery : document.getElementById(`search-${paneId}`).value).trim().toLowerCase();
+            
+            const inputEl = document.getElementById(`search-${paneId}`);
+            const selectEl = document.getElementById(`search-results-${paneId}`);
+            const btnSearch = document.getElementById(`btn-search-${paneId}`);
+            const btnClear = document.getElementById(`btn-clear-${paneId}`);
             const statusEl = document.getElementById(`status-${paneId}`);
             
-            if (!rawQuery) { statusEl.textContent = ""; pane.lastSearchQuery = ''; pane.lastSearchPage = 0; return; }
+            const rawQuery = (overrideQuery !== null ? overrideQuery : inputEl.value).trim().toLowerCase();
+            if (!rawQuery) { clearSearch(paneId); return; }
+            
             const normalizedQuery = rawQuery.replace(/\s+/g, '');
+            
+            inputEl.disabled = true; btnSearch.disabled = true;
             statusEl.textContent = "Scanning...";
             
             let startPage = 1;
@@ -801,10 +802,7 @@
                 if (book && book.answerStartPage > 1) startPage = Math.min(book.answerStartPage, totalPages);
             }
 
-            if (pane.lastSearchQuery === normalizedQuery && pane.lastSearchPage >= startPage) startPage = pane.lastSearchPage + 1;
-            else { pane.lastSearchQuery = normalizedQuery; pane.lastSearchPage = 0; }
-
-            if (startPage > totalPages) { statusEl.textContent = "End of doc."; pane.lastSearchPage = 0; return; }
+            const results = [];
 
             try {
                 for (let i = startPage; i <= totalPages; i++) {
@@ -816,20 +814,74 @@
                         for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]);
                         rawText += itemStr;
                     }
-                    const matchIndex = rawText.indexOf(normalizedQuery);
-                    if (matchIndex !== -1) {
-                        statusEl.textContent = `Found (Pg ${i})`; pane.lastSearchPage = i;
+                    
+                    let matchIndex = rawText.indexOf(normalizedQuery);
+                    let pageMatchCount = 0;
+                    while (matchIndex !== -1) {
+                        pageMatchCount++;
                         const targetItem = itemMap[matchIndex];
-                        if (targetItem && targetItem.transform) pane.searchTarget = { x: targetItem.transform[4], y: targetItem.transform[5] };
-                        renderPage(paneId, i, 'center'); return; 
+                        let coords = null;
+                        if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
+                        results.push({ page: i, coords: coords, instance: pageMatchCount });
+                        matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
                     }
-                    if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); 
+                    
+                    if (i % 10 === 0) {
+                        statusEl.textContent = `Scanning Pg ${i}...`;
+                        await new Promise(r => setTimeout(r, 0)); // non-blocking yield
+                    }
                 }
-                statusEl.textContent = "No more found."; pane.lastSearchPage = 0; 
-            } catch (err) { console.error(err); statusEl.textContent = "Error."; }
+                
+                if (results.length > 0) {
+                    statusEl.textContent = `${results.length} found`;
+                    selectEl.innerHTML = `<option value="">Select a match...</option>`;
+                    results.forEach((res, index) => {
+                        const opt = document.createElement('option');
+                        opt.value = JSON.stringify(res);
+                        opt.textContent = `Match ${index + 1} (Page ${res.page})`;
+                        selectEl.appendChild(opt);
+                    });
+                    
+                    inputEl.classList.add('hidden'); btnSearch.classList.add('hidden');
+                    selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
+                    
+                    // Auto jump to first result
+                    jumpToSearchResult(paneId, JSON.stringify(results[0]));
+                    selectEl.selectedIndex = 1;
+
+                } else {
+                    statusEl.textContent = "No matches.";
+                    inputEl.disabled = false; btnSearch.disabled = false;
+                }
+            } catch (err) { 
+                console.error(err); statusEl.textContent = "Error."; 
+                inputEl.disabled = false; btnSearch.disabled = false;
+            }
         }
 
-        ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearch(paneId); }); });
+        function clearSearch(paneId) {
+            document.getElementById(`search-${paneId}`).classList.remove('hidden');
+            document.getElementById(`search-${paneId}`).disabled = false;
+            document.getElementById(`search-${paneId}`).value = '';
+            document.getElementById(`btn-search-${paneId}`).classList.remove('hidden');
+            document.getElementById(`btn-search-${paneId}`).disabled = false;
+            
+            document.getElementById(`search-results-${paneId}`).classList.add('hidden');
+            document.getElementById(`btn-clear-${paneId}`).classList.add('hidden');
+            document.getElementById(`status-${paneId}`).textContent = '';
+            panes[paneId].searchTarget = null;
+        }
+
+        window.jumpToSearchResult = (paneId, val = null) => {
+            const selectEl = document.getElementById(`search-results-${paneId}`);
+            const value = val || selectEl.value;
+            if (!value) return;
+            const res = JSON.parse(value);
+            panes[paneId].searchTarget = res.coords;
+            renderPage(paneId, res.page, 'center');
+        };
+
+        ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearchAll(paneId); }); });
 
         /* --- Settings Logic --- */
         async function populateSettings() {
