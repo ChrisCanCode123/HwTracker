@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pro PDF Study Tool</title>
+    
     <!-- iOS Web App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Study Pro">
-
-    <!-- iOS App Icon (Requires a square image named icon.png) -->
     <link rel="apple-touch-icon" href="icon.png">
-
-    <!-- Standard App Manifest -->
     <link rel="manifest" href="manifest.json">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro PDF Study Tool</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -303,7 +300,7 @@
             </div>
         </section>
 
-        <!-- Draggable Resizer (Hidden in single view) -->
+        <!-- Draggable Resizer -->
         <div id="resizer" class="resizer" title="Drag to resize">
             <div class="flex flex-col gap-1"><div class="w-1 h-1 bg-slate-400 rounded-full"></div><div class="w-1 h-1 bg-slate-400 rounded-full"></div><div class="w-1 h-1 bg-slate-400 rounded-full"></div></div>
         </div>
@@ -352,7 +349,7 @@
             </div>
         </section>
         
-        <!-- Mobile View Toggler (Sticky Bottom on Single View) -->
+        <!-- Mobile View Toggler -->
         <div id="mobile-tab-bar" class="hidden absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-800/90 dark:bg-slate-700/90 backdrop-blur-md p-1 rounded-full shadow-2xl z-40 border border-slate-700 dark:border-slate-600 flex items-center w-[240px]">
             <button onclick="switchMobileTab('left')" id="tab-left" class="flex-1 py-2 px-4 text-xs font-bold uppercase rounded-full text-white bg-blue-600 shadow-inner transition-colors">Questions</button>
             <button onclick="switchMobileTab('right')" id="tab-right" class="flex-1 py-2 px-4 text-xs font-bold uppercase rounded-full text-slate-300 hover:text-white transition-colors">Answers</button>
@@ -361,6 +358,16 @@
     </main>
 
     <script>
+        // --- OFFLINE SERVICE WORKER REGISTRATION ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => { console.log('Offline mode activated successfully.'); })
+                    .catch(err => { console.log('Service Worker failed: ', err); });
+            });
+        }
+        
+        // Configure PDF.js Worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         /* --- Global State --- */
@@ -441,7 +448,6 @@
                 activePaneId = 'right';
             }
             
-            // Allow DOM to paint new display:flex layout before calculating Zoom, otherwise it reads 0 width
             if (pdfDoc) {
                 setTimeout(() => {
                     if (appSettings.defaultZoom === 'width') zoomToWidth(target);
@@ -596,12 +602,11 @@
 
         function resetZoom(paneId) {
             const pane = panes[paneId]; if (!pane.canvas.width) return;
-            // Fallback to container width if pane is hidden (fixes glitch on tab switch)
             let viewWidth = pane.viewport.clientWidth;
             if (viewWidth === 0) viewWidth = document.getElementById('main-container').clientWidth;
             
             pane.scale = (viewWidth - 40) / pane.canvas.width;
-            if (pane.scale < 0.1) pane.scale = 0.1; // Failsafe
+            if (pane.scale < 0.1) pane.scale = 0.1; 
             pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; 
             applyTransform(paneId);
         }
@@ -708,8 +713,6 @@
                 });
 
                 panes.left.pageNumPending = null; panes.right.pageNumPending = null;
-                
-                // Initialize right pane to Answers start page correctly
                 const ansPage = book.answerStartPage && book.answerStartPage > 1 ? book.answerStartPage : 1;
                 
                 renderPage('left', 1, appSettings.defaultZoom);
@@ -743,15 +746,9 @@
                     if (viewHeight === 0) viewHeight = document.getElementById('main-container').clientHeight;
                     
                     const fitScale = (viewWidth - 40) / pane.canvas.width;
-                    // Slightly larger than fit, but not overwhelming
                     pane.scale = fitScale * 1.1; 
-                    
                     const [px, py] = viewport.convertToViewportPoint(pane.searchTarget.x, pane.searchTarget.y);
-                    
-                    pane.x = (viewWidth / 2) - (px * pane.scale); 
-                    // Center roughly 25% down the screen so context below is visible
-                    pane.y = (viewHeight / 4) - (py * pane.scale);
-                    
+                    pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
                     applyTransform(paneId); pane.searchTarget = null;
                 } else if (zoomMode === 'width') zoomToWidth(paneId);
                 else resetZoom(paneId);
