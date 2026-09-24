@@ -393,7 +393,6 @@
             forceSingleView: false,
             defaultZoom: 'fit'
         };
-        // Backwards compatibility for old dark mode setting
         if (localStorage.getItem('studyToolDarkMode') !== null) {
             appSettings.darkMode = localStorage.getItem('studyToolDarkMode') === 'true';
             localStorage.removeItem('studyToolDarkMode');
@@ -421,7 +420,6 @@
         };
 
         /* --- Settings & Layout Management --- */
-        
         function saveSettings() {
             localStorage.setItem('studyToolSettings', JSON.stringify(appSettings));
         }
@@ -443,7 +441,6 @@
             const tabBar = document.getElementById('mobile-tab-bar');
             const isMobile = window.innerWidth < 768;
             
-            // Toggle settings UI
             const toggleSV = document.getElementById('toggle-single-view');
             if (appSettings.forceSingleView) {
                 toggleSV.classList.replace('bg-slate-300', 'bg-blue-600');
@@ -457,23 +454,19 @@
 
             if (isMobile || appSettings.forceSingleView) {
                 container.classList.add('single-view-mode');
-                // Guarantee at least one view is active to prevent blank screens
                 if (!container.classList.contains('show-left') && !container.classList.contains('show-right')) {
                     container.classList.add('show-left');
                 }
                 tabBar.style.display = 'flex';
-                // Reset widths so flexbox takes over fully
                 document.getElementById('pane-left').style.width = '100%';
                 document.getElementById('pane-right').style.width = '100%';
             } else {
                 container.classList.remove('single-view-mode');
                 tabBar.style.display = 'none';
-                // Restore 50/50 split for desktop
                 document.getElementById('pane-left').style.width = '50%';
                 document.getElementById('pane-right').style.width = '50%';
             }
             
-            // Recalculate zoom based on new dimensions
             if (pdfDoc) {
                 setTimeout(() => {
                     renderPage('left', panes.left.pageNum, appSettings.defaultZoom);
@@ -487,7 +480,6 @@
             const tabLeft = document.getElementById('tab-left');
             const tabRight = document.getElementById('tab-right');
             
-            // Replaced fragile class replacement with strict add/remove state forcing
             if (target === 'left') {
                 container.classList.add('show-left');
                 container.classList.remove('show-right');
@@ -508,37 +500,27 @@
                 activePaneId = 'right';
             }
             
-            // Recalculate layout in case viewport size changed while hidden
             if (pdfDoc) resetZoom(target);
         }
 
-        // Settings Listeners
         document.getElementById('toggle-dark-mode-settings').addEventListener('click', () => {
-            appSettings.darkMode = !appSettings.darkMode;
-            saveSettings();
-            applyTheme();
+            appSettings.darkMode = !appSettings.darkMode; saveSettings(); applyTheme();
         });
         
         document.getElementById('toggle-single-view').addEventListener('click', () => {
-            appSettings.forceSingleView = !appSettings.forceSingleView;
-            saveSettings();
-            applyLayout();
+            appSettings.forceSingleView = !appSettings.forceSingleView; saveSettings(); applyLayout();
         });
 
         document.getElementById('select-default-zoom').addEventListener('change', (e) => {
-            appSettings.defaultZoom = e.target.value;
-            saveSettings();
+            appSettings.defaultZoom = e.target.value; saveSettings();
         });
 
         document.getElementById('btn-mobile-menu').addEventListener('click', () => {
             const controls = document.getElementById('header-controls');
-            controls.classList.toggle('hidden');
-            controls.classList.toggle('flex');
-            controls.classList.toggle('mt-4');
+            controls.classList.toggle('hidden'); controls.classList.toggle('flex'); controls.classList.toggle('mt-4');
         });
 
-        /* --- Modals, DB, and UI Utilities --- */
-        
+        /* --- Utilities --- */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -547,48 +529,34 @@
             toast.innerHTML = (type === 'error' ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>` : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`) + `<span>${message}</span>`;
             container.appendChild(toast);
             requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
-            setTimeout(() => {
-                toast.classList.add('translate-y-10', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
+            setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
         function customPrompt(defaultValue, callback) {
-            const modal = document.getElementById('modal-prompt');
-            const input = document.getElementById('prompt-input');
-            input.value = defaultValue;
-            promptCallback = callback;
+            const modal = document.getElementById('modal-prompt'); const input = document.getElementById('prompt-input');
+            input.value = defaultValue; promptCallback = callback;
             modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                modal.firstElementChild.classList.remove('scale-95');
-                input.focus(); input.select();
-            }, 10);
+            setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); input.focus(); input.select(); }, 10);
         }
 
         document.getElementById('btn-prompt-cancel').addEventListener('click', () => { closeModal('modal-prompt'); if(promptCallback) promptCallback(null); });
         document.getElementById('btn-prompt-ok').addEventListener('click', () => { closeModal('modal-prompt'); if(promptCallback) promptCallback(document.getElementById('prompt-input').value); });
 
         function customConfirm(callback) {
-            const modal = document.getElementById('modal-confirm');
-            confirmCallback = callback;
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 10);
+            const modal = document.getElementById('modal-confirm'); confirmCallback = callback;
+            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 10);
         }
 
         document.getElementById('btn-confirm-cancel').addEventListener('click', () => { closeModal('modal-confirm'); if(confirmCallback) confirmCallback(false); });
         document.getElementById('btn-confirm-ok').addEventListener('click', () => { closeModal('modal-confirm'); if(confirmCallback) confirmCallback(true); });
 
         function closeModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.add('opacity-0');
-            modal.firstElementChild.classList.add('scale-95');
+            const modal = document.getElementById(id); modal.classList.add('opacity-0'); modal.firstElementChild.classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 200);
         }
 
-        const DB_NAME = 'PDFStudyLibrary';
-        const DB_VERSION = 1;
-        const STORE_NAME = 'books';
+        /* --- Database --- */
+        const DB_NAME = 'PDFStudyLibrary'; const DB_VERSION = 1; const STORE_NAME = 'books';
         async function initDB() {
             return new Promise((resolve, reject) => {
                 const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -616,81 +584,64 @@
             });
         }
 
+        /* --- Interaction --- */
         document.getElementById('pane-left').addEventListener('mouseenter', () => activePaneId = 'left');
         document.getElementById('pane-right').addEventListener('mouseenter', () => activePaneId = 'right');
         window.addEventListener('keydown', (e) => {
             if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-            if (e.key === 'ArrowLeft') changePage(activePaneId, -1);
-            else if (e.key === 'ArrowRight') changePage(activePaneId, 1);
+            if (e.key === 'ArrowLeft') changePage(activePaneId, -1); else if (e.key === 'ArrowRight') changePage(activePaneId, 1);
         });
 
         function toggleEmptyState(show, isCompletelyEmpty = false) {
-            const overlay = document.getElementById('empty-state-overlay');
-            const msgEl = document.getElementById('empty-state-msg');
-            const searchGlobal = document.getElementById('search-global');
-            const btnGlobalSearch = document.getElementById('btn-global-search');
+            const overlay = document.getElementById('empty-state-overlay'); const msgEl = document.getElementById('empty-state-msg');
+            const searchGlobal = document.getElementById('search-global'); const btnGlobalSearch = document.getElementById('btn-global-search');
             if (show) {
-                overlay.classList.remove('hidden');
-                searchGlobal.disabled = true; btnGlobalSearch.disabled = true;
+                overlay.classList.remove('hidden'); searchGlobal.disabled = true; btnGlobalSearch.disabled = true;
                 msgEl.textContent = isCompletelyEmpty ? "Your library is currently empty. Click 'Add Book' above to securely upload your first PDF textbook." : "Please select a book from the dropdown above to begin studying.";
             } else {
-                overlay.classList.add('hidden');
-                searchGlobal.disabled = false; btnGlobalSearch.disabled = false;
+                overlay.classList.add('hidden'); searchGlobal.disabled = false; btnGlobalSearch.disabled = false;
             }
         }
 
-        // Splitter Drag Logic
         const resizer = document.getElementById('resizer');
-        const paneLeft = document.getElementById('pane-left');
-        const paneRight = document.getElementById('pane-right');
-        const mainContainer = document.getElementById('main-container');
-        let isResizing = false;
+        const paneLeft = document.getElementById('pane-left'); const paneRight = document.getElementById('pane-right');
+        const mainContainer = document.getElementById('main-container'); let isResizing = false;
 
         resizer.addEventListener('mousedown', () => {
-            isResizing = true;
-            document.body.style.cursor = 'col-resize';
-            panes.left.wrapper.style.pointerEvents = 'none';
-            panes.right.wrapper.style.pointerEvents = 'none';
+            isResizing = true; document.body.style.cursor = 'col-resize';
+            panes.left.wrapper.style.pointerEvents = 'none'; panes.right.wrapper.style.pointerEvents = 'none';
         });
 
         document.addEventListener('mousemove', (e) => {
             const container = document.getElementById('main-container');
             if (!isResizing || container.classList.contains('single-view-mode')) return;
-            const containerWidth = mainContainer.offsetWidth;
-            let percent = (e.clientX / containerWidth) * 100;
+            const containerWidth = mainContainer.offsetWidth; let percent = (e.clientX / containerWidth) * 100;
             if (percent < 10) percent = 10; if (percent > 90) percent = 90;
             paneLeft.style.width = `${percent}%`; paneRight.style.width = `${100 - percent}%`;
         });
 
         document.addEventListener('mouseup', () => {
             if (isResizing) {
-                isResizing = false;
-                document.body.style.cursor = '';
-                panes.left.wrapper.style.pointerEvents = '';
-                panes.right.wrapper.style.pointerEvents = '';
+                isResizing = false; document.body.style.cursor = '';
+                panes.left.wrapper.style.pointerEvents = ''; panes.right.wrapper.style.pointerEvents = '';
             }
         });
 
-        /* --- Managing library and uploads... --- */
+        /* --- PDF & Library Core --- */
         async function refreshDropdown() {
             const select = document.getElementById('book-selector');
             const books = await getBooks();
             select.innerHTML = '<option value="">Select a book...</option>';
             books.forEach(b => {
-                const opt = document.createElement('option');
-                opt.value = b.id; opt.textContent = b.name;
-                if (b.id === currentBookId) opt.selected = true;
-                select.appendChild(opt);
+                const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name;
+                if (b.id === currentBookId) opt.selected = true; select.appendChild(opt);
             });
             return books;
         }
 
         document.getElementById('book-selector').addEventListener('change', async (e) => {
             const id = e.target.value;
-            if (!id) {
-                currentBookId = null; pdfDoc = null; clearCanvases(); toggleEmptyState(true, false);
-                return;
-            }
+            if (!id) { currentBookId = null; pdfDoc = null; clearCanvases(); toggleEmptyState(true, false); return; }
             await loadBookToView(id);
         });
 
@@ -704,166 +655,115 @@
                     const buffer = await file.arrayBuffer();
                     await saveBook({ id: bookId, name: bookName.trim(), pdfData: buffer, answerStartPage: 1 });
                     showToast("Book saved securely to browser memory.");
-                    await refreshDropdown();
-                    document.getElementById('book-selector').value = bookId;
-                    await loadBookToView(bookId);
+                    await refreshDropdown(); document.getElementById('book-selector').value = bookId; await loadBookToView(bookId);
                 } catch (err) { console.error(err); showToast("Failed to process the book.", "error"); }
                 e.target.value = ''; 
             });
         });
 
-        /* --- Canvas Zoom and Pan Functions (Mouse & Touch) --- */
         function applyTransform(paneId) {
-            const pane = panes[paneId];
-            pane.wrapper.style.transform = `translate(${pane.x}px, ${pane.y}px) scale(${pane.scale})`;
+            const pane = panes[paneId]; pane.wrapper.style.transform = `translate(${pane.x}px, ${pane.y}px) scale(${pane.scale})`;
         }
 
         function resetZoom(paneId) {
-            const pane = panes[paneId];
-            if (!pane.canvas.width) return;
+            const pane = panes[paneId]; if (!pane.canvas.width) return;
             const viewWidth = pane.viewport.clientWidth;
             pane.scale = (viewWidth - 40) / pane.canvas.width;
-            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2;
-            pane.y = 20; 
+            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; 
             applyTransform(paneId);
         }
 
         function zoomToWidth(paneId) {
-            const pane = panes[paneId];
-            if (!pane.canvas.width) return;
+            const pane = panes[paneId]; if (!pane.canvas.width) return;
             const viewWidth = pane.viewport.clientWidth;
             pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.25; 
-            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2;
-            pane.y = 20; 
+            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; 
             applyTransform(paneId);
         }
 
         function setupPanZoom(paneId) {
             const pane = panes[paneId];
-            
-            // Mouse Wheel Zoom
             pane.viewport.addEventListener('wheel', (e) => {
-                if (!pdfDoc) return;
-                e.preventDefault();
+                if (!pdfDoc) return; e.preventDefault();
                 const rect = pane.viewport.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left, mouseY = e.clientY - rect.top;
-                const targetX = (mouseX - pane.x) / pane.scale, targetY = (mouseY - pane.y) / pane.scale;
+                const targetX = ((e.clientX - rect.left) - pane.x) / pane.scale, targetY = ((e.clientY - rect.top) - pane.y) / pane.scale;
                 let newScale = pane.scale * (1 + (-e.deltaY * 0.002));
                 if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
-                pane.scale = newScale;
-                pane.x = mouseX - (targetX * pane.scale); pane.y = mouseY - (targetY * pane.scale);
+                pane.scale = newScale; pane.x = (e.clientX - rect.left) - (targetX * pane.scale); pane.y = (e.clientY - rect.top) - (targetY * pane.scale);
                 applyTransform(paneId);
             }, { passive: false });
 
-            // Mouse Pan
             pane.viewport.addEventListener('mousedown', (e) => {
                 if (!pdfDoc || e.button !== 0) return;
                 pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
                 pane.startX = e.clientX - pane.x; pane.startY = e.clientY - pane.y;
             });
             window.addEventListener('mousemove', (e) => {
-                if (!pane.isDragging) return;
-                pane.x = e.clientX - pane.startX; pane.y = e.clientY - pane.startY;
-                applyTransform(paneId);
+                if (!pane.isDragging) return; pane.x = e.clientX - pane.startX; pane.y = e.clientY - pane.startY; applyTransform(paneId);
             });
             const stopDrag = () => { pane.isDragging = false; pane.wrapper.classList.remove('is-dragging'); };
-            window.addEventListener('mouseup', stopDrag);
-            pane.viewport.addEventListener('mouseleave', stopDrag);
+            window.addEventListener('mouseup', stopDrag); pane.viewport.addEventListener('mouseleave', stopDrag);
 
-            // Touch Gestures (Pinch to Zoom, Swipe, Touch Pan)
-            let touchStartDistance = 0, initialScale = 1;
-            let touchStartX = 0, touchStartY = 0, touchTime = 0;
-
+            let touchStartDistance = 0, initialScale = 1, touchStartX = 0, touchTime = 0;
             pane.viewport.addEventListener('touchstart', (e) => {
                 if (!pdfDoc) return;
                 if (e.touches.length === 1) {
-                    // Pan or Swipe preparation
                     pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
-                    touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-                    pane.startX = touchStartX - pane.x; pane.startY = touchStartY - pane.y;
+                    touchStartX = e.touches[0].clientX; pane.startX = touchStartX - pane.x; pane.startY = e.touches[0].clientY - pane.y;
                     touchTime = Date.now();
                 } else if (e.touches.length === 2) {
-                    // Pinch Zoom preparation
-                    pane.isDragging = false;
-                    touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                    pane.isDragging = false; touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                     initialScale = pane.scale;
                 }
             }, { passive: false });
 
             pane.viewport.addEventListener('touchmove', (e) => {
-                if (!pdfDoc) return;
-                e.preventDefault(); // Stop entire page from pulling/scrolling
-                
+                if (!pdfDoc) return; e.preventDefault(); 
                 if (e.touches.length === 1 && pane.isDragging) {
-                    pane.x = e.touches[0].clientX - pane.startX;
-                    pane.y = e.touches[0].clientY - pane.startY;
-                    applyTransform(paneId);
+                    pane.x = e.touches[0].clientX - pane.startX; pane.y = e.touches[0].clientY - pane.startY; applyTransform(paneId);
                 } else if (e.touches.length === 2) {
                     const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                     let newScale = initialScale * (currentDistance / touchStartDistance);
                     if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
-                    
-                    // Center of pinch
                     const rect = pane.viewport.getBoundingClientRect();
-                    const centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left;
-                    const centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
-                    
-                    const targetX = (centerX - pane.x) / pane.scale;
-                    const targetY = (centerY - pane.y) / pane.scale;
-                    
-                    pane.scale = newScale;
-                    pane.x = centerX - (targetX * pane.scale); pane.y = centerY - (targetY * pane.scale);
+                    const centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left, centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+                    const targetX = (centerX - pane.x) / pane.scale, targetY = (centerY - pane.y) / pane.scale;
+                    pane.scale = newScale; pane.x = centerX - (targetX * pane.scale); pane.y = centerY - (targetY * pane.scale);
                     applyTransform(paneId);
                 }
             }, { passive: false });
 
             pane.viewport.addEventListener('touchend', (e) => {
                 if (!pdfDoc) return;
-                
-                // Swipe Detection
                 if (e.changedTouches.length === 1 && pane.isDragging) {
-                    const endX = e.changedTouches[0].clientX;
-                    const deltaX = endX - touchStartX;
-                    const deltaTime = Date.now() - touchTime;
-                    
-                    // Quick, long swipe horizontally
-                    if (Math.abs(deltaX) > 80 && deltaTime < 300) {
-                        if (deltaX > 0) changePage(paneId, -1); // Swipe right = Prev
-                        else changePage(paneId, 1); // Swipe left = Next
+                    const deltaX = e.changedTouches[0].clientX - touchStartX;
+                    if (Math.abs(deltaX) > 80 && (Date.now() - touchTime) < 300) {
+                        if (deltaX > 0) changePage(paneId, -1); else changePage(paneId, 1);
                     }
                 }
-                
-                pane.isDragging = false; 
-                pane.wrapper.classList.remove('is-dragging');
+                pane.isDragging = false; pane.wrapper.classList.remove('is-dragging');
             });
         }
+        setupPanZoom('left'); setupPanZoom('right');
 
-        setupPanZoom('left');
-        setupPanZoom('right');
-
-        /* --- PDF Rendering Engine --- */
         function clearCanvases() {
             ['left', 'right'].forEach(id => {
                 panes[id].ctx.clearRect(0, 0, panes[id].canvas.width, panes[id].canvas.height);
-                document.getElementById(`total-${id}`).textContent = '?';
-                document.getElementById(`page-${id}`).value = 1;
+                document.getElementById(`total-${id}`).textContent = '?'; document.getElementById(`page-${id}`).value = 1;
             });
         }
 
         async function loadBookToView(id) {
             currentBookId = id;
-            const books = await getBooks();
-            const book = books.find(b => b.id === id);
+            const books = await getBooks(); const book = books.find(b => b.id === id);
             if (!book) return;
 
             toggleEmptyState(false);
-            document.getElementById('loading-left').classList.remove('hidden');
-            document.getElementById('loading-right').classList.remove('hidden');
+            document.getElementById('loading-left').classList.remove('hidden'); document.getElementById('loading-right').classList.remove('hidden');
 
             try {
                 const loadingTask = pdfjsLib.getDocument({ data: book.pdfData });
-                pdfDoc = await loadingTask.promise;
-                totalPages = pdfDoc.numPages;
+                pdfDoc = await loadingTask.promise; totalPages = pdfDoc.numPages;
 
                 ['left', 'right'].forEach(paneId => {
                     document.getElementById(`total-${paneId}`).textContent = totalPages;
@@ -872,10 +772,13 @@
                 });
 
                 panes.left.pageNumPending = null; panes.right.pageNumPending = null;
+                
+                // THE BUG FIX: The right pane now loads the Answers page by default instead of page 1
+                const ansPage = book.answerStartPage && book.answerStartPage > 1 ? book.answerStartPage : 1;
+                
                 renderPage('left', 1, appSettings.defaultZoom);
-                renderPage('right', 1, appSettings.defaultZoom);
+                renderPage('right', ansPage, appSettings.defaultZoom);
 
-                // On mobile load, auto-switch to left tab if not already
                 if (window.innerWidth < 768 || appSettings.forceSingleView) switchMobileTab('left');
 
             } catch (err) { console.error(err); showToast("Failed to decode PDF data.", "error"); }
@@ -884,15 +787,10 @@
         async function renderPage(paneId, num, zoomMode = 'fit') {
             if (!pdfDoc) return;
             const pane = panes[paneId];
-            
             if (num < 1) num = 1; if (num > totalPages) num = totalPages;
+            if (pane.pageRendering) { pane.pageNumPending = num; pane.zoomModePending = zoomMode; return; }
             
-            if (pane.pageRendering) {
-                pane.pageNumPending = num; pane.zoomModePending = zoomMode; return;
-            }
-            
-            pane.pageRendering = true;
-            document.getElementById(`loading-${paneId}`).classList.remove('hidden');
+            pane.pageRendering = true; document.getElementById(`loading-${paneId}`).classList.remove('hidden');
             
             try {
                 const page = await pdfDoc.getPage(num);
@@ -904,39 +802,25 @@
                 
                 if (zoomMode === 'center' && pane.searchTarget) {
                     const viewWidth = pane.viewport.clientWidth, viewHeight = pane.viewport.clientHeight;
-                    
-                    // Very mild 10% zoom over base fit scale so text isn't huge but slightly highlighted
                     const fitScale = (viewWidth - 40) / pane.canvas.width;
                     pane.scale = fitScale * 1.1; 
-                    
                     const [px, py] = viewport.convertToViewportPoint(pane.searchTarget.x, pane.searchTarget.y);
-                    
-                    // Center X horizontally, but place Y around 25% down from the top (viewHeight / 4)
-                    pane.x = (viewWidth / 2) - (px * pane.scale); 
-                    pane.y = (viewHeight / 4) - (py * pane.scale);
-                    
-                    applyTransform(paneId);
-                    pane.searchTarget = null;
-                } else if (zoomMode === 'width') {
-                    zoomToWidth(paneId);
-                } else {
-                    resetZoom(paneId);
-                }
+                    pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
+                    applyTransform(paneId); pane.searchTarget = null;
+                } else if (zoomMode === 'width') zoomToWidth(paneId);
+                else resetZoom(paneId);
             } catch (err) { console.error("Render Error:", err); } 
             finally {
-                pane.pageRendering = false;
-                document.getElementById(`loading-${paneId}`).classList.add('hidden');
+                pane.pageRendering = false; document.getElementById(`loading-${paneId}`).classList.add('hidden');
                 if (pane.pageNumPending !== null) {
                     const nextNum = pane.pageNumPending, nextZoom = pane.zoomModePending || appSettings.defaultZoom;
-                    pane.pageNumPending = null; pane.zoomModePending = null;
-                    renderPage(paneId, nextNum, nextZoom);
+                    pane.pageNumPending = null; pane.zoomModePending = null; renderPage(paneId, nextNum, nextZoom);
                 }
             }
         }
 
         function changePage(paneId, offset) {
-            const current = panes[paneId].pageNum;
-            let next = current + offset;
+            const current = panes[paneId].pageNum; let next = current + offset;
             if (next >= 1 && next <= totalPages) renderPage(paneId, next, appSettings.defaultZoom);
         }
 
@@ -970,20 +854,17 @@
             let startPage = 1;
             const answersOnlyCheckbox = document.getElementById(`answers-only-${paneId}`);
             if (answersOnlyCheckbox && answersOnlyCheckbox.checked) {
-                const books = await getBooks();
-                const book = books.find(b => b.id === currentBookId);
+                const books = await getBooks(); const book = books.find(b => b.id === currentBookId);
                 if (book && book.answerStartPage > 1) startPage = Math.min(book.answerStartPage, totalPages);
             }
 
             if (pane.lastSearchQuery === normalizedQuery && pane.lastSearchPage >= startPage) startPage = pane.lastSearchPage + 1;
             else { pane.lastSearchQuery = normalizedQuery; pane.lastSearchPage = 0; }
-
             if (startPage > totalPages) { statusEl.textContent = "End of doc."; pane.lastSearchPage = 0; return; }
 
             try {
                 for (let i = startPage; i <= totalPages; i++) {
-                    const page = await pdfDoc.getPage(i);
-                    const textContent = await page.getTextContent();
+                    const page = await pdfDoc.getPage(i); const textContent = await page.getTextContent();
                     let rawText = '', itemMap = [];
                     for (let j = 0; j < textContent.items.length; j++) {
                         const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
@@ -992,14 +873,10 @@
                     }
                     const matchIndex = rawText.indexOf(normalizedQuery);
                     if (matchIndex !== -1) {
-                        statusEl.textContent = `Found (Pg ${i})`;
-                        pane.lastSearchPage = i;
+                        statusEl.textContent = `Found (Pg ${i})`; pane.lastSearchPage = i;
                         const targetItem = itemMap[matchIndex];
                         if (targetItem && targetItem.transform) pane.searchTarget = { x: targetItem.transform[4], y: targetItem.transform[5] };
-                        
-                        // Using 'center' will now gently position towards top
-                        renderPage(paneId, i, 'center');
-                        return; 
+                        renderPage(paneId, i, 'center'); return; 
                     }
                     if (i % 10 === 0) await new Promise(r => setTimeout(r, 0)); 
                 }
@@ -1007,17 +884,13 @@
             } catch (err) { console.error(err); statusEl.textContent = "Error."; }
         }
 
-        ['left', 'right'].forEach(paneId => {
-            document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearch(paneId); });
-        });
+        ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearch(paneId); }); });
 
-        /* --- Settings Modal Logic --- */
+        /* --- Settings Logic --- */
         async function populateSettings() {
-            const settingsList = document.getElementById('settings-book-list');
-            settingsList.innerHTML = '';
+            const settingsList = document.getElementById('settings-book-list'); settingsList.innerHTML = '';
             const books = await getBooks();
             if (books.length === 0) { settingsList.innerHTML = '<p class="text-slate-500 italic text-sm">No books in library. Add a book first.</p>'; return; }
-
             books.forEach(book => {
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm";
@@ -1045,8 +918,7 @@
             if (book) {
                 book.answerStartPage = val; await saveBook(book);
                 const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button');
-                const origText = btn.textContent; btn.textContent = "Saved!";
-                btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
+                const origText = btn.textContent; btn.textContent = "Saved!"; btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
                 setTimeout(() => { btn.textContent = origText; btn.classList.remove("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300"); }, 1500);
             }
         };
@@ -1065,35 +937,21 @@
         };
 
         document.getElementById('btn-settings').addEventListener('click', async () => {
-            await populateSettings();
-            const modal = document.getElementById('modal-settings');
-            modal.classList.remove('hidden');
+            await populateSettings(); const modal = document.getElementById('modal-settings'); modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 10);
-            // Auto close mobile header if open
-            document.getElementById('header-controls').classList.add('hidden');
-            document.getElementById('header-controls').classList.remove('flex', 'mt-4');
+            document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex', 'mt-4');
         });
 
         document.getElementById('btn-close-settings').addEventListener('click', () => { closeModal('modal-settings'); });
 
-        /* --- Initialization --- */
         window.addEventListener('DOMContentLoaded', async () => {
-            applyTheme();
-            applyLayout();
+            applyTheme(); applyLayout();
             try {
-                await initDB();
-                const books = await refreshDropdown();
-                if (books.length > 0) toggleEmptyState(true, false); 
-                else toggleEmptyState(true, true);
+                await initDB(); const books = await refreshDropdown();
+                if (books.length > 0) toggleEmptyState(true, false); else toggleEmptyState(true, true);
             } catch (err) { console.error("Init Error:", err); showToast("Failed to initialize database.", "error"); }
             
-            let resizeTimer;
-            window.addEventListener('resize', () => {
-                clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(() => {
-                    applyLayout();
-                }, 150);
-            });
+            let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { applyLayout(); }, 150); });
         });
     </script>
 </body>
