@@ -68,7 +68,6 @@
 
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- Header Navigation -->
     <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 flex-shrink-0 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3 relative">
         <div class="flex items-center justify-between w-full md:w-auto">
             <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center gap-2">
@@ -110,7 +109,6 @@
         </div>
     </header>
 
-    <!-- Modals -->
     <div id="modal-prompt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 px-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Name Your Book</h3>
@@ -150,7 +148,6 @@
                 <section>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">App Preferences</h3>
                     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-col gap-4 shadow-sm">
-                        
                         <div class="flex items-center justify-between">
                             <div>
                                 <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Dark Mode</h4>
@@ -161,7 +158,6 @@
                             </button>
                         </div>
                         <div class="w-full h-px bg-slate-100 dark:bg-slate-700"></div>
-                        
                         <div class="flex items-center justify-between">
                             <div>
                                 <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Force Single View</h4>
@@ -172,7 +168,6 @@
                             </button>
                         </div>
                         <div class="w-full h-px bg-slate-100 dark:bg-slate-700"></div>
-
                         <div class="flex items-center justify-between">
                             <div>
                                 <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Default Zoom</h4>
@@ -183,10 +178,8 @@
                                 <option value="width">Fit to Width</option>
                             </select>
                         </div>
-
                     </div>
                 </section>
-
                 <section>
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Library Manager</h3>
                     <div id="settings-book-list" class="flex flex-col gap-3"></div>
@@ -195,7 +188,6 @@
         </div>
     </div>
 
-    <!-- Main Workspace -->
     <main class="flex-1 flex w-full h-full overflow-hidden relative show-left" id="main-container">
         
         <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors px-4 text-center">
@@ -210,14 +202,12 @@
             </button>
         </div>
 
-        <!-- Left Pane (Questions) -->
         <section id="pane-left" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700" style="width: 50%;">
             <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
                 
                 <div class="flex items-center gap-2 w-full">
                     <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
                     <div class="flex-1 relative flex items-center gap-1">
-                        <!-- Dynamic Search Area -->
                         <input type="text" id="search-left" placeholder="Search..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
                         <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
                         <button id="btn-search-left" onclick="executeSearchAll('left')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
@@ -261,19 +251,16 @@
             </div>
         </section>
 
-        <!-- Draggable Resizer -->
         <div id="resizer" class="resizer" title="Drag to resize">
             <div class="flex flex-col gap-1"><div class="w-1 h-1 bg-slate-400 rounded-full"></div><div class="w-1 h-1 bg-slate-400 rounded-full"></div><div class="w-1 h-1 bg-slate-400 rounded-full"></div></div>
         </div>
 
-        <!-- Right Pane (Answers) -->
         <section id="pane-right" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
             <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
                 
                 <div class="flex items-center gap-2 w-full">
                     <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers</span>
                     <div class="flex-1 relative flex items-center gap-1">
-                        <!-- Dynamic Search Area -->
                         <input type="text" id="search-right" placeholder="Search..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
                         <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
                         <button id="btn-search-right" onclick="executeSearchAll('right')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
@@ -317,16 +304,13 @@
             </div>
         </section>
         
-        <!-- Mobile View Toggler -->
         <div id="mobile-tab-bar" class="hidden absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-800/90 dark:bg-slate-700/90 backdrop-blur-md p-1 rounded-full shadow-2xl z-40 border border-slate-700 dark:border-slate-600 flex items-center w-[240px]">
             <button onclick="switchMobileTab('left')" id="tab-left" class="flex-1 py-2 px-4 text-xs font-bold uppercase rounded-full text-white bg-blue-600 shadow-inner transition-colors">Questions</button>
             <button onclick="switchMobileTab('right')" id="tab-right" class="flex-1 py-2 px-4 text-xs font-bold uppercase rounded-full text-slate-300 hover:text-white transition-colors">Answers</button>
         </div>
-
     </main>
 
     <script>
-        // --- OFFLINE SERVICE WORKER REGISTRATION ---
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
@@ -335,15 +319,9 @@
             });
         }
         
-        // Configure PDF.js Worker
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-        /* --- Global State --- */
-        let db;
-        let currentBookId = null;
-        let pdfDoc = null;
-        let totalPages = 0;
-        let activePaneId = 'left';
+        let db; let currentBookId = null; let pdfDoc = null; let totalPages = 0; let activePaneId = 'left';
         
         let appSettings = JSON.parse(localStorage.getItem('studyToolSettings')) || { darkMode: true, forceSingleView: false, defaultZoom: 'fit' };
         if (localStorage.getItem('studyToolDarkMode') !== null) {
@@ -355,7 +333,6 @@
             right: { pageNum: 1, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-right'), wrapper: document.getElementById('wrapper-right'), canvas: document.getElementById('canvas-right'), ctx: document.getElementById('canvas-right').getContext('2d'), renderScale: 2.5 }
         };
 
-        /* --- Layout & Themes --- */
         function saveSettings() { localStorage.setItem('studyToolSettings', JSON.stringify(appSettings)); }
 
         function applyTheme() {
@@ -393,7 +370,6 @@
             }
             
             if (pdfDoc) {
-                // Await sequentially to prevent canvas crashing on resize
                 await renderPage('left', panes.left.pageNum, appSettings.defaultZoom);
                 await renderPage('right', panes.right.pageNum, appSettings.defaultZoom);
             }
@@ -414,13 +390,7 @@
                 tabLeft.classList.remove('bg-blue-600', 'text-white'); tabLeft.classList.add('text-slate-300');
                 activePaneId = 'right';
             }
-            
-            if (pdfDoc) {
-                setTimeout(() => {
-                    if (appSettings.defaultZoom === 'width') zoomToWidth(target);
-                    else resetZoom(target);
-                }, 10);
-            }
+            if (pdfDoc) { setTimeout(() => { if (appSettings.defaultZoom === 'width') zoomToWidth(target); else resetZoom(target); }, 10); }
         }
 
         document.getElementById('toggle-dark-mode-settings').addEventListener('click', () => { appSettings.darkMode = !appSettings.darkMode; saveSettings(); applyTheme(); });
@@ -431,7 +401,6 @@
             controls.classList.toggle('hidden'); controls.classList.toggle('flex'); controls.classList.toggle('mt-4');
         });
 
-        /* --- UI Utilities --- */
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div');
             toast.className = `${type === 'error' ? 'bg-red-600' : 'bg-slate-800 dark:bg-blue-600'} text-white px-4 py-3 rounded-lg shadow-xl font-medium text-sm transform translate-y-10 opacity-0 transition-all duration-300 flex items-center gap-2`;
@@ -461,7 +430,6 @@
             setTimeout(() => modal.classList.add('hidden'), 200);
         }
 
-        /* --- Database --- */
         const DB_NAME = 'PDFStudyLibrary'; const DB_VERSION = 1; const STORE_NAME = 'books';
         async function initDB() {
             return new Promise((resolve, reject) => {
@@ -490,7 +458,6 @@
             });
         }
 
-        /* --- Interaction --- */
         document.getElementById('pane-left').addEventListener('mouseenter', () => activePaneId = 'left');
         document.getElementById('pane-right').addEventListener('mouseenter', () => activePaneId = 'right');
         window.addEventListener('keydown', (e) => {
@@ -530,7 +497,6 @@
             }
         });
 
-        /* --- PDF & Library Core --- */
         async function refreshDropdown() {
             const select = document.getElementById('book-selector'); const books = await getBooks();
             select.innerHTML = '<option value="">Select a book...</option>';
@@ -686,7 +652,6 @@
 
                 const ansPage = book.answerStartPage && book.answerStartPage > 1 ? book.answerStartPage : 1;
                 
-                // BULLETPROOF RACE CONDITION FIX: Load pages sequentially, never parallel on load
                 await renderPage('left', 1, appSettings.defaultZoom);
                 await renderPage('right', ansPage, appSettings.defaultZoom);
 
@@ -700,7 +665,6 @@
             const pane = panes[paneId];
             if (num < 1) num = 1; if (num > totalPages) num = totalPages;
             
-            // If already rendering, queue the next request and cancel the current one to speed it up
             if (pane.pageRendering) { 
                 pane.pageNumPending = num; 
                 pane.zoomModePending = zoomMode; 
@@ -713,12 +677,20 @@
             try {
                 const page = await pdfDoc.getPage(num);
                 const viewport = page.getViewport({ scale: pane.renderScale });
+                
+                // CRITICAL MEMORY FIX: Destroy old canvas memory before allocating new space
+                pane.canvas.width = 0; 
+                pane.canvas.height = 0;
+                
                 pane.canvas.height = viewport.height; pane.canvas.width = viewport.width;
                 
                 const renderContext = { canvasContext: pane.ctx, viewport: viewport };
                 pane.renderTask = page.render(renderContext);
                 
                 await pane.renderTask.promise;
+                
+                // CRITICAL MEMORY FIX 2: Release internal PDF page data from RAM
+                setTimeout(() => page.cleanup(), 50);
                 
                 pane.pageNum = num; document.getElementById(`page-${paneId}`).value = num;
                 
@@ -736,7 +708,6 @@
                 } else if (zoomMode === 'width') zoomToWidth(paneId);
                 else resetZoom(paneId);
             } catch (err) { 
-                // Ignore cancellation errors gracefully
                 if (err.name !== 'RenderingCancelledException') console.error("Render Error:", err); 
             } 
             finally {
@@ -762,14 +733,12 @@
             });
         });
 
-        /* --- New "Find All" Search Engine --- */
         async function executeGlobalSearch() {
             const query = document.getElementById('search-global').value.trim();
             if (!query || !pdfDoc) return;
             document.getElementById('search-left').value = query; document.getElementById('search-right').value = query;
             document.getElementById('btn-global-search').disabled = true; document.getElementById('search-global').disabled = true;
             try { 
-                // Await sequentially to avoid crashing pdf.js text extractor
                 await executeSearchAll('left', query); 
                 await executeSearchAll('right', query); 
             } 
@@ -826,9 +795,10 @@
                         matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
                     }
                     
-                    if (i % 10 === 0) {
+                    // CRITICAL MEMORY FIX 3: Yield more often so the phone processor doesn't panic
+                    if (i % 2 === 0) {
                         statusEl.textContent = `Scanning Pg ${i}...`;
-                        await new Promise(r => setTimeout(r, 0)); // non-blocking yield
+                        await new Promise(r => setTimeout(r, 15));
                     }
                 }
                 
@@ -845,7 +815,6 @@
                     inputEl.classList.add('hidden'); btnSearch.classList.add('hidden');
                     selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
                     
-                    // Auto jump to first result
                     jumpToSearchResult(paneId, JSON.stringify(results[0]));
                     selectEl.selectedIndex = 1;
 
@@ -883,7 +852,6 @@
 
         ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearchAll(paneId); }); });
 
-        /* --- Settings Logic --- */
         async function populateSettings() {
             const settingsList = document.getElementById('settings-book-list'); settingsList.innerHTML = '';
             const books = await getBooks();
