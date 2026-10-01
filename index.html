@@ -685,21 +685,45 @@
             }
 
             const results = [];
-            try {
+           try {
                 for (let i = startPage; i <= totalPages; i++) {
-                    const page = await pdfDoc.getPage(i); const textContent = await page.getTextContent();
-                    let rawText = '', itemMap = [];
+                    const page = await pdfDoc.getPage(i); 
+                    const textContent = await page.getTextContent();
+                    
+                    // FAST PASS: Just combine the text first without mapping coordinates
+                    let rawText = '';
                     for (let j = 0; j < textContent.items.length; j++) {
-                        const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
-                        for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]); rawText += itemStr;
+                        rawText += textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
                     }
-                    let matchIndex = rawText.indexOf(normalizedQuery), pageMatchCount = 0;
-                    while (matchIndex !== -1) {
-                        pageMatchCount++; const targetItem = itemMap[matchIndex];
-                        let coords = null; if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
-                        results.push({ page: i, coords: coords, instance: pageMatchCount }); matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
+                    
+                    // Only do the heavy math if the page actually contains the search term
+                    if (rawText.includes(normalizedQuery)) {
+                        let itemMap = [];
+                        for (let j = 0; j < textContent.items.length; j++) {
+                            const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
+                            for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]);
+                        }
+                        
+                        let matchIndex = rawText.indexOf(normalizedQuery), pageMatchCount = 0;
+                        while (matchIndex !== -1) {
+                            pageMatchCount++; 
+                            const targetItem = itemMap[matchIndex];
+                            let coords = null; 
+                            if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
+                            
+                            results.push({ page: i, coords: coords, instance: pageMatchCount }); 
+                            matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
+                        }
                     }
-                    if (i % 2 === 0) { statusEl.textContent = `Scanning Pg ${i}...`; await new Promise(r => setTimeout(r, 15)); } 
+                    
+                    // Free up memory immediately after checking the page
+                    setTimeout(() => page.cleanup(), 5);
+
+                    // Yield much faster (every 5 pages for 1ms instead of every 2 pages for 15ms)
+                    if (i % 5 === 0) { 
+                        statusEl.textContent = `Scanning Pg ${i}...`; 
+                        await new Promise(r => setTimeout(r, 1)); 
+                    } 
                 }
                 
                 if (results.length > 0) {
@@ -711,8 +735,12 @@
                     inputEl.classList.add('hidden'); btnSearch.classList.add('hidden'); selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
                     pane.previousPage = pane.pageNum; document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
                     jumpToSearchResult(paneId, JSON.stringify(results[0])); selectEl.selectedIndex = 1;
-                } else { statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false; }
-            } catch (err) { statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; }
+                } else { 
+                    statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false; 
+                }
+            } catch (err) { 
+                statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; 
+            }
         }
 
         function clearSearch(paneId) {
