@@ -1,54 +1,78 @@
-const CACHE_NAME = 'study-pro-offline-v2';
+const CACHE_NAME = 'chris-pdf-v3';
 
-// Only cache the guaranteed local files upfront
-const LOCAL_ASSETS = [
+// We must explicitly list every external file to guarantee offline survival
+const CORE_ASSETS = [
     './',
     './index.html',
     './manifest.json',
-    './icon.png'
+    './icon.png',
+    'https://cdn.tailwindcss.com',
+    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js'
 ];
 
 self.addEventListener('install', (event) => {
+    self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(LOCAL_ASSETS);
+            // Force download all assets immediately. If CORS fails, fallback to opaque (no-cors) caching.
+            return Promise.all(
+                CORE_ASSETS.map(url => {
+                    return fetch(new Request(url, { mode: 'cors', credentials: 'omit' }))
+                        .then(response => {
+                            if (!response.ok) throw new Error('Network not ok');
+                            return cache.put(url, response);
+                        })
+                        .catch(err => {
+                            return fetch(new Request(url, { mode: 'no-cors' }))
+                                .then(res => cache.put(url, res))
+                                .catch(e => console.log('Critical cache failed:', url));
+                        });
+                })
+            );
         })
     );
-    self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-    event.waitUntil(self.clients.claim());
+    self.clients.claim();
+    // Instantly delete old v1/v2 caches to force the phone to use v3
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cacheName) => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
+        })
+    );
 });
 
-// Dynamically cache external links (Tailwind, PDF.js, Fonts) as they are requested
 self.addEventListener('fetch', (event) => {
+    if (event.request.method !== 'GET') return;
+    
+    // Check cache first, then fall back to network
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            // Return cached version if we have it
-            if (cachedResponse) {
-                return cachedResponse;
-            }
+            if (cachedResponse) return cachedResponse; // Instant load from offline cache
             
-            // Otherwise, fetch from network, cache it for next time, and return it
             return fetch(event.request).then((networkResponse) => {
-                // Don't cache bad responses, but DO cache opaque (CDN) responses
-                if (!networkResponse || (networkResponse.status !== 200 && networkResponse.type !== 'opaque')) {
+                if (!networkResponse || (networkResponse.status !== 200 && networkResponse.status !== 0)) {
                     return networkResponse;
                 }
                 
-                let responseToCache = networkResponse.clone();
+                // Dynamic caching for any future files we didn't explicitly list
+                const responseToCache = networkResponse.clone();
                 caches.open(CACHE_NAME).then((cache) => {
-                    // Only cache HTTP/HTTPS requests (ignores browser extensions/file protocols)
-                    if (event.request.url.startsWith('http')) {
-                        cache.put(event.request, responseToCache);
-                    }
+                    cache.put(event.request, responseToCache);
                 });
                 
                 return networkResponse;
             }).catch(() => {
-                // Failsafe for when offline and file isn't in cache
-                return new Response('', { status: 408, statusText: 'Request timed out.' });
+                console.log('Offline: Resource missing from cache ->', event.request.url);
             });
         })
     );
