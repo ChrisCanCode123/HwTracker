@@ -20,10 +20,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
-        }
+        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
     </script>
     
     <style>
@@ -42,11 +39,10 @@
         .dark .resizer { background-color: #334155; }
         .dark .resizer:hover, .dark .resizer:active { background-color: #64748b; }
         
-        .viewport { overflow: hidden; position: relative; background-color: #f1f5f9; width: 100%; height: 100%; cursor: grab; }
-        .viewport:active { cursor: grabbing; }
+        .viewport { overflow: hidden; position: relative; background-color: #f1f5f9; width: 100%; height: 100%; }
         .dark .viewport { background-color: #0f172a; }
         
-        .canvas-wrapper { position: absolute; transform-origin: top left; will-change: transform; transition: transform 0.1s ease-out; }
+        .canvas-wrapper { position: absolute; transform-origin: top left; will-change: transform; transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1); }
         .canvas-wrapper.is-dragging { transition: none; }
         
         .pdf-canvas { display: block; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1); background-color: white; transition: filter 0.3s ease; }
@@ -55,13 +51,18 @@
         .loader { border: 3px solid rgba(156, 163, 175, 0.2); border-top: 3px solid #3b82f6; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Mobile Single View Utility Classes */
         .single-view-mode #resizer { display: none !important; }
         .single-view-mode .pane { width: 100% !important; }
         .single-view-mode.show-left #pane-right { display: none !important; }
         .single-view-mode.show-left #pane-left { display: flex !important; }
         .single-view-mode.show-right #pane-left { display: none !important; }
         .single-view-mode.show-right #pane-right { display: flex !important; }
+
+        /* Custom Range Slider */
+        input[type=range] { -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px; }
+        .dark input[type=range]::-webkit-slider-runnable-track { background: #475569; }
     </style>
 </head>
 <body class="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
@@ -91,16 +92,13 @@
                     </div>
                     <input type="text" id="search-global" placeholder="Global search both views..." class="block w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm">
                 </div>
-                <button id="btn-global-search" onclick="executeGlobalSearch()" class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50">
-                    Search All
-                </button>
+                <button id="btn-global-search" onclick="executeGlobalSearch()" class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50">Search All</button>
             </div>
 
             <div class="flex items-center gap-2 w-full md:w-auto justify-end">
                 <input type="file" id="file-upload" accept="application/pdf" class="hidden">
                 <button id="btn-add-book" onclick="document.getElementById('file-upload').click()" class="flex-1 md:flex-none justify-center bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1 border border-indigo-200 dark:border-indigo-800">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                    <span>Add Book</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> <span>Add Book</span>
                 </button>
                 <button id="btn-settings" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -109,6 +107,7 @@
         </div>
     </header>
 
+    <!-- Modals -->
     <div id="modal-prompt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 px-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Name Your Book</h3>
@@ -149,34 +148,18 @@
                     <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">App Preferences</h3>
                     <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 flex flex-col gap-4 shadow-sm">
                         <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Dark Mode</h4>
-                                <p class="text-xs text-slate-500">Inverts PDF colors for late-night studying.</p>
-                            </div>
-                            <button id="toggle-dark-mode-settings" class="w-12 h-6 rounded-full bg-slate-300 dark:bg-blue-600 relative transition-colors">
-                                <div class="absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform transform dark:translate-x-6"></div>
-                            </button>
+                            <div><h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Dark Mode</h4><p class="text-xs text-slate-500">Inverts PDF colors.</p></div>
+                            <button id="toggle-dark-mode-settings" class="w-12 h-6 rounded-full bg-slate-300 dark:bg-blue-600 relative transition-colors"><div class="absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform transform dark:translate-x-6"></div></button>
                         </div>
                         <div class="w-full h-px bg-slate-100 dark:bg-slate-700"></div>
                         <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Force Single View</h4>
-                                <p class="text-xs text-slate-500">Disable side-by-side split, even on desktop.</p>
-                            </div>
-                            <button id="toggle-single-view" class="w-12 h-6 rounded-full bg-slate-300 relative transition-colors">
-                                <div class="absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform transform"></div>
-                            </button>
+                            <div><h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Force Single View</h4><p class="text-xs text-slate-500">Disable side-by-side split.</p></div>
+                            <button id="toggle-single-view" class="w-12 h-6 rounded-full bg-slate-300 relative transition-colors"><div class="absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition-transform transform"></div></button>
                         </div>
                         <div class="w-full h-px bg-slate-100 dark:bg-slate-700"></div>
                         <div class="flex items-center justify-between">
-                            <div>
-                                <h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Default Zoom</h4>
-                                <p class="text-xs text-slate-500">How pages load initially.</p>
-                            </div>
-                            <select id="select-default-zoom" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs rounded p-1">
-                                <option value="fit">Fit to Screen</option>
-                                <option value="width">Fit to Width</option>
-                            </select>
+                            <div><h4 class="font-semibold text-sm text-slate-800 dark:text-slate-200">Default Zoom</h4><p class="text-xs text-slate-500">How pages load initially.</p></div>
+                            <select id="select-default-zoom" class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-xs rounded p-1"><option value="fit">Fit to Screen</option><option value="width">Fit to Width</option></select>
                         </div>
                     </div>
                 </section>
@@ -188,6 +171,7 @@
         </div>
     </div>
 
+    <!-- Main Workspace -->
     <main class="flex-1 flex w-full h-full overflow-hidden relative show-left" id="main-container">
         
         <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors px-4 text-center">
@@ -197,14 +181,13 @@
             <h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-200 mb-2">Welcome to Study Tool Pro</h2>
             <p id="empty-state-msg" class="text-sm md:text-base text-slate-500 dark:text-slate-400 mb-8 max-w-md">Your library is currently empty. Click "Add Book" above to securely upload your first PDF textbook.</p>
             <button onclick="document.getElementById('file-upload').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-                Upload PDF Book
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Upload PDF Book
             </button>
         </div>
 
+        <!-- Left Pane -->
         <section id="pane-left" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700" style="width: 50%;">
-            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
-                
+            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
                 <div class="flex items-center gap-2 w-full">
                     <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
                     <div class="flex-1 relative flex items-center gap-1">
@@ -212,40 +195,34 @@
                         <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
                         <button id="btn-search-left" onclick="executeSearchAll('left')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
                         <button id="btn-clear-left" onclick="clearSearch('left')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded text-sm font-bold flex-shrink-0 transition-colors">&times;</button>
+                        <button id="btn-snap-left" onclick="snapBack('left')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
                     </div>
                 </div>
-
-                <div class="flex items-center justify-between mt-1">
-                    <div class="flex items-center gap-1">
+                <div class="flex flex-col gap-1 mt-1">
+                    <div class="flex items-center justify-between w-full">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                            Pg <input type="number" id="page-left" value="1" min="1" class="w-10 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:border-blue-500">
-                            of <span id="total-left" class="ml-1 mr-2">?</span>
+                            Pg <input type="number" id="page-left" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:border-blue-500">
+                            <span class="mr-2">/ <span id="total-left">?</span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400"><input type="checkbox" id="answers-only-left" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600"> Ans Only</label>
+                            <span id="status-left" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
+                            <button onclick="resetZoom('left')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded" title="Fit to Screen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400">
-                            <input type="checkbox" id="answers-only-left" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600">
-                            Answers Only
-                        </label>
-                        <span id="status-left" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
-                        <button onclick="resetZoom('left')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded" title="Fit to Screen">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                        </button>
-                    </div>
+                    <input type="range" id="scrubber-left" min="1" value="1" class="w-full mt-1">
                 </div>
             </div>
             
-            <div id="viewport-left" class="viewport group">
-                <div class="absolute inset-y-0 left-2 flex items-center z-20 pointer-events-none opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('left', -1)" class="pointer-events-auto p-2 bg-slate-900/40 hover:bg-blue-600 text-white rounded-full shadow-md" title="Previous Page">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
+            <div id="viewport-left" class="viewport">
+                <!-- Persistent Thumb Arrows -->
+                <div class="absolute bottom-[20%] left-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('left', -1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
                 </div>
-                <div class="absolute inset-y-0 right-2 flex items-center z-20 pointer-events-none opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('left', 1)" class="pointer-events-auto p-2 bg-slate-900/40 hover:bg-blue-600 text-white rounded-full shadow-md" title="Next Page">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
+                <div class="absolute bottom-[20%] right-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('left', 1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
+
                 <div id="wrapper-left" class="canvas-wrapper"><canvas id="canvas-left" class="pdf-canvas"></canvas></div>
                 <div id="loading-left" class="absolute inset-0 flex items-center justify-center bg-slate-100/80 dark:bg-slate-900/80 hidden z-10 backdrop-blur-sm"><div class="loader"></div></div>
             </div>
@@ -255,9 +232,9 @@
             <div class="flex flex-col gap-1"><div class="w-1 h-1 bg-slate-400 rounded-full"></div><div class="w-1 h-1 bg-slate-400 rounded-full"></div><div class="w-1 h-1 bg-slate-400 rounded-full"></div></div>
         </div>
 
+        <!-- Right Pane -->
         <section id="pane-right" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
-            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-2 z-10 shadow-sm relative">
-                
+            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
                 <div class="flex items-center gap-2 w-full">
                     <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers</span>
                     <div class="flex-1 relative flex items-center gap-1">
@@ -265,39 +242,32 @@
                         <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
                         <button id="btn-search-right" onclick="executeSearchAll('right')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
                         <button id="btn-clear-right" onclick="clearSearch('right')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded text-sm font-bold flex-shrink-0 transition-colors">&times;</button>
+                        <button id="btn-snap-right" onclick="snapBack('right')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
                     </div>
                 </div>
-
-                <div class="flex items-center justify-between mt-1">
-                    <div class="flex items-center gap-1">
+                <div class="flex flex-col gap-1 mt-1">
+                    <div class="flex items-center justify-between w-full">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                            Pg <input type="number" id="page-right" value="1" min="1" class="w-10 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:border-blue-500">
-                            of <span id="total-right" class="ml-1 mr-2">?</span>
+                            Pg <input type="number" id="page-right" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:border-blue-500">
+                            <span class="mr-2">/ <span id="total-right">?</span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-blue-600 dark:text-blue-400"><input type="checkbox" id="answers-only-right" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-700" checked> Ans Only</label>
+                            <span id="status-right" class="text-xs font-semibold text-slate-500"></span>
+                            <button onclick="resetZoom('right')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded" title="Fit to Screen"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg></button>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-blue-600 dark:text-blue-400">
-                            <input type="checkbox" id="answers-only-right" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-700" checked>
-                            Answers Only
-                        </label>
-                        <span id="status-right" class="text-xs font-semibold text-slate-500"></span>
-                        <button onclick="resetZoom('right')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded" title="Fit to Screen">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                        </button>
-                    </div>
+                    <input type="range" id="scrubber-right" min="1" value="1" class="w-full mt-1">
                 </div>
             </div>
             
-            <div id="viewport-right" class="viewport group">
-                <div class="absolute inset-y-0 left-2 flex items-center z-20 pointer-events-none opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('right', -1)" class="pointer-events-auto p-2 bg-slate-900/40 hover:bg-blue-600 text-white rounded-full shadow-md" title="Previous Page">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
-                    </button>
+            <div id="viewport-right" class="viewport">
+                <!-- Persistent Thumb Arrows -->
+                <div class="absolute bottom-[20%] left-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('right', -1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
                 </div>
-                <div class="absolute inset-y-0 right-2 flex items-center z-20 pointer-events-none opacity-0 md:group-hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('right', 1)" class="pointer-events-auto p-2 bg-slate-900/40 hover:bg-blue-600 text-white rounded-full shadow-md" title="Next Page">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
-                    </button>
+                <div class="absolute bottom-[20%] right-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('right', 1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
                 <div id="wrapper-right" class="canvas-wrapper"><canvas id="canvas-right" class="pdf-canvas"></canvas></div>
                 <div id="loading-right" class="absolute inset-0 flex items-center justify-center bg-slate-100/80 dark:bg-slate-900/80 hidden z-10 backdrop-blur-sm"><div class="loader"></div></div>
@@ -311,26 +281,15 @@
     </main>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => { console.log('Offline mode activated successfully.'); })
-                    .catch(err => { console.log('Service Worker failed: ', err); });
-            });
-        }
-        
+        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); }); }
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         let db; let currentBookId = null; let pdfDoc = null; let totalPages = 0; let activePaneId = 'left';
-        
         let appSettings = JSON.parse(localStorage.getItem('studyToolSettings')) || { darkMode: true, forceSingleView: false, defaultZoom: 'fit' };
-        if (localStorage.getItem('studyToolDarkMode') !== null) {
-            appSettings.darkMode = localStorage.getItem('studyToolDarkMode') === 'true'; localStorage.removeItem('studyToolDarkMode');
-        }
 
         const panes = {
-            left: { pageNum: 1, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-left'), wrapper: document.getElementById('wrapper-left'), canvas: document.getElementById('canvas-left'), ctx: document.getElementById('canvas-left').getContext('2d'), renderScale: 2.5 },
-            right: { pageNum: 1, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-right'), wrapper: document.getElementById('wrapper-right'), canvas: document.getElementById('canvas-right'), ctx: document.getElementById('canvas-right').getContext('2d'), renderScale: 2.5 }
+            left: { pageNum: 1, previousPage: null, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-left'), wrapper: document.getElementById('wrapper-left'), canvas: document.getElementById('canvas-left'), ctx: document.getElementById('canvas-left').getContext('2d'), renderScale: 2.5 },
+            right: { pageNum: 1, previousPage: null, pageRendering: false, renderTask: null, pageNumPending: null, zoomModePending: null, searchTarget: null, scale: 1, x: 0, y: 0, isDragging: false, startX: 0, startY: 0, viewport: document.getElementById('viewport-right'), wrapper: document.getElementById('wrapper-right'), canvas: document.getElementById('canvas-right'), ctx: document.getElementById('canvas-right').getContext('2d'), renderScale: 2.5 }
         };
 
         function saveSettings() { localStorage.setItem('studyToolSettings', JSON.stringify(appSettings)); }
@@ -348,37 +307,26 @@
         }
 
         async function applyLayout() {
-            const container = document.getElementById('main-container');
-            const tabBar = document.getElementById('mobile-tab-bar');
-            const isMobile = window.innerWidth < 768;
-            
+            const container = document.getElementById('main-container'); const tabBar = document.getElementById('mobile-tab-bar');
             const toggleSV = document.getElementById('toggle-single-view');
             if (appSettings.forceSingleView) { toggleSV.classList.replace('bg-slate-300', 'bg-blue-600'); toggleSV.firstElementChild.classList.add('translate-x-6'); } 
             else { toggleSV.classList.replace('bg-blue-600', 'bg-slate-300'); toggleSV.firstElementChild.classList.remove('translate-x-6'); }
             
             document.getElementById('select-default-zoom').value = appSettings.defaultZoom;
-
-            if (isMobile || appSettings.forceSingleView) {
+            if (window.innerWidth < 768 || appSettings.forceSingleView) {
                 container.classList.add('single-view-mode');
                 if (!container.classList.contains('show-left') && !container.classList.contains('show-right')) container.classList.add('show-left');
-                tabBar.style.display = 'flex';
-                document.getElementById('pane-left').style.width = '100%'; document.getElementById('pane-right').style.width = '100%';
+                tabBar.style.display = 'flex'; document.getElementById('pane-left').style.width = '100%'; document.getElementById('pane-right').style.width = '100%';
             } else {
-                container.classList.remove('single-view-mode');
-                tabBar.style.display = 'none';
+                container.classList.remove('single-view-mode'); tabBar.style.display = 'none';
                 document.getElementById('pane-left').style.width = '50%'; document.getElementById('pane-right').style.width = '50%';
             }
-            
-            if (pdfDoc) {
-                await renderPage('left', panes.left.pageNum, appSettings.defaultZoom);
-                await renderPage('right', panes.right.pageNum, appSettings.defaultZoom);
-            }
+            if (pdfDoc) { await renderPage('left', panes.left.pageNum, appSettings.defaultZoom); await renderPage('right', panes.right.pageNum, appSettings.defaultZoom); }
         }
 
         function switchMobileTab(target) {
             const container = document.getElementById('main-container');
             const tabLeft = document.getElementById('tab-left'); const tabRight = document.getElementById('tab-right');
-            
             if (target === 'left') {
                 container.classList.add('show-left'); container.classList.remove('show-right');
                 tabLeft.classList.add('bg-blue-600', 'text-white'); tabLeft.classList.remove('text-slate-300');
@@ -397,14 +345,13 @@
         document.getElementById('toggle-single-view').addEventListener('click', () => { appSettings.forceSingleView = !appSettings.forceSingleView; saveSettings(); applyLayout(); });
         document.getElementById('select-default-zoom').addEventListener('change', (e) => { appSettings.defaultZoom = e.target.value; saveSettings(); });
         document.getElementById('btn-mobile-menu').addEventListener('click', () => {
-            const controls = document.getElementById('header-controls');
-            controls.classList.toggle('hidden'); controls.classList.toggle('flex'); controls.classList.toggle('mt-4');
+            const controls = document.getElementById('header-controls'); controls.classList.toggle('hidden'); controls.classList.toggle('flex'); controls.classList.toggle('mt-4');
         });
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div');
             toast.className = `${type === 'error' ? 'bg-red-600' : 'bg-slate-800 dark:bg-blue-600'} text-white px-4 py-3 rounded-lg shadow-xl font-medium text-sm transform translate-y-10 opacity-0 transition-all duration-300 flex items-center gap-2`;
-            toast.innerHTML = (type === 'error' ? `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>` : `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`) + `<span>${message}</span>`;
+            toast.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>${message}</span>`;
             container.appendChild(toast); requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
             setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
@@ -426,10 +373,10 @@
         document.getElementById('btn-confirm-ok').addEventListener('click', () => { closeModal('modal-confirm'); if(confirmCallback) confirmCallback(true); });
 
         function closeModal(id) {
-            const modal = document.getElementById(id); modal.classList.add('opacity-0'); modal.firstElementChild.classList.add('scale-95');
-            setTimeout(() => modal.classList.add('hidden'), 200);
+            const modal = document.getElementById(id); modal.classList.add('opacity-0'); modal.firstElementChild.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 200);
         }
 
+        /* --- DATABASE LOGIC (MEMORY SPIKE FIXED) --- */
         const DB_NAME = 'PDFStudyLibrary'; const DB_VERSION = 1; const STORE_NAME = 'books';
         async function initDB() {
             return new Promise((resolve, reject) => {
@@ -439,9 +386,27 @@
                 req.onsuccess = (e) => { db = e.target.result; resolve(); };
             });
         }
-        function getBooks() {
+        
+        // Use a cursor to get ONLY the titles and avoid pulling 500MB PDFs into RAM
+        function getBooksMetadata() {
             return new Promise((resolve, reject) => {
-                const req = db.transaction([STORE_NAME], "readonly").objectStore(STORE_NAME).getAll();
+                const tx = db.transaction([STORE_NAME], "readonly");
+                const store = tx.objectStore(STORE_NAME);
+                const req = store.openCursor();
+                const books = [];
+                req.onsuccess = (e) => {
+                    const cursor = e.target.result;
+                    if (cursor) {
+                        books.push({ id: cursor.value.id, name: cursor.value.name, answerStartPage: cursor.value.answerStartPage });
+                        cursor.continue();
+                    } else { resolve(books); }
+                };
+                req.onerror = () => reject();
+            });
+        }
+        function getBookFull(id) {
+            return new Promise((resolve, reject) => {
+                const req = db.transaction([STORE_NAME], "readonly").objectStore(STORE_NAME).get(id);
                 req.onsuccess = () => resolve(req.result); req.onerror = () => reject();
             });
         }
@@ -458,47 +423,21 @@
             });
         }
 
-        document.getElementById('pane-left').addEventListener('mouseenter', () => activePaneId = 'left');
-        document.getElementById('pane-right').addEventListener('mouseenter', () => activePaneId = 'right');
-        window.addEventListener('keydown', (e) => {
-            if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-            if (e.key === 'ArrowLeft') changePage(activePaneId, -1); else if (e.key === 'ArrowRight') changePage(activePaneId, 1);
-        });
-
-        function toggleEmptyState(show, isCompletelyEmpty = false) {
-            const overlay = document.getElementById('empty-state-overlay'); const msgEl = document.getElementById('empty-state-msg');
-            const searchGlobal = document.getElementById('search-global'); const btnGlobalSearch = document.getElementById('btn-global-search');
-            if (show) {
-                overlay.classList.remove('hidden'); searchGlobal.disabled = true; btnGlobalSearch.disabled = true;
-                msgEl.textContent = isCompletelyEmpty ? "Your library is currently empty. Click 'Add Book' above to securely upload your first PDF textbook." : "Please select a book from the dropdown above to begin studying.";
-            } else { overlay.classList.add('hidden'); searchGlobal.disabled = false; btnGlobalSearch.disabled = false; }
-        }
-
         const resizer = document.getElementById('resizer'); const paneLeft = document.getElementById('pane-left'); const paneRight = document.getElementById('pane-right');
         const mainContainer = document.getElementById('main-container'); let isResizing = false;
 
-        resizer.addEventListener('mousedown', () => {
-            isResizing = true; document.body.style.cursor = 'col-resize';
-            panes.left.wrapper.style.pointerEvents = 'none'; panes.right.wrapper.style.pointerEvents = 'none';
-        });
-
+        resizer.addEventListener('mousedown', () => { isResizing = true; document.body.style.cursor = 'col-resize'; panes.left.wrapper.style.pointerEvents = 'none'; panes.right.wrapper.style.pointerEvents = 'none'; });
         document.addEventListener('mousemove', (e) => {
-            const container = document.getElementById('main-container');
-            if (!isResizing || container.classList.contains('single-view-mode')) return;
+            if (!isResizing || mainContainer.classList.contains('single-view-mode')) return;
             const containerWidth = mainContainer.offsetWidth; let percent = (e.clientX / containerWidth) * 100;
             if (percent < 10) percent = 10; if (percent > 90) percent = 90;
             paneLeft.style.width = `${percent}%`; paneRight.style.width = `${100 - percent}%`;
         });
-
-        document.addEventListener('mouseup', () => {
-            if (isResizing) {
-                isResizing = false; document.body.style.cursor = '';
-                panes.left.wrapper.style.pointerEvents = ''; panes.right.wrapper.style.pointerEvents = '';
-            }
-        });
+        document.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; panes.left.wrapper.style.pointerEvents = ''; panes.right.wrapper.style.pointerEvents = ''; } });
 
         async function refreshDropdown() {
-            const select = document.getElementById('book-selector'); const books = await getBooks();
+            const select = document.getElementById('book-selector'); 
+            const books = await getBooksMetadata(); // Safe memory call
             select.innerHTML = '<option value="">Select a book...</option>';
             books.forEach(b => {
                 const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name;
@@ -529,30 +468,18 @@
             });
         });
 
-        function applyTransform(paneId) {
-            const pane = panes[paneId]; pane.wrapper.style.transform = `translate(${pane.x}px, ${pane.y}px) scale(${pane.scale})`;
-        }
-
+        function applyTransform(paneId) { const pane = panes[paneId]; pane.wrapper.style.transform = `translate(${pane.x}px, ${pane.y}px) scale(${pane.scale})`; }
         function resetZoom(paneId) {
             const pane = panes[paneId]; if (!pane.canvas.width) return;
-            let viewWidth = pane.viewport.clientWidth;
-            if (viewWidth === 0) viewWidth = document.getElementById('main-container').clientWidth;
-            
-            pane.scale = (viewWidth - 40) / pane.canvas.width;
-            if (pane.scale < 0.1) pane.scale = 0.1; 
-            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; 
-            applyTransform(paneId);
+            let viewWidth = pane.viewport.clientWidth; if (viewWidth === 0) viewWidth = document.getElementById('main-container').clientWidth;
+            pane.scale = (viewWidth - 40) / pane.canvas.width; if (pane.scale < 0.1) pane.scale = 0.1; 
+            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; applyTransform(paneId);
         }
-
         function zoomToWidth(paneId) {
             const pane = panes[paneId]; if (!pane.canvas.width) return;
-            let viewWidth = pane.viewport.clientWidth;
-            if (viewWidth === 0) viewWidth = document.getElementById('main-container').clientWidth;
-            
-            pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.25; 
-            if (pane.scale < 0.1) pane.scale = 0.1; 
-            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; 
-            applyTransform(paneId);
+            let viewWidth = pane.viewport.clientWidth; if (viewWidth === 0) viewWidth = document.getElementById('main-container').clientWidth;
+            pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.25; if (pane.scale < 0.1) pane.scale = 0.1; 
+            pane.x = (viewWidth - (pane.canvas.width * pane.scale)) / 2; pane.y = 20; applyTransform(paneId);
         }
 
         function setupPanZoom(paneId) {
@@ -568,26 +495,38 @@
             }, { passive: false });
 
             pane.viewport.addEventListener('mousedown', (e) => {
-                if (!pdfDoc || e.button !== 0) return;
-                pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
-                pane.startX = e.clientX - pane.x; pane.startY = e.clientY - pane.y;
+                if (!pdfDoc || e.button !== 0) return; pane.isDragging = true; pane.wrapper.classList.add('is-dragging'); pane.startX = e.clientX - pane.x; pane.startY = e.clientY - pane.y;
             });
-            window.addEventListener('mousemove', (e) => {
-                if (!pane.isDragging) return; pane.x = e.clientX - pane.startX; pane.y = e.clientY - pane.startY; applyTransform(paneId);
-            });
+            window.addEventListener('mousemove', (e) => { if (!pane.isDragging) return; pane.x = e.clientX - pane.startX; pane.y = e.clientY - pane.startY; applyTransform(paneId); });
             const stopDrag = () => { pane.isDragging = false; pane.wrapper.classList.remove('is-dragging'); };
             window.addEventListener('mouseup', stopDrag); pane.viewport.addEventListener('mouseleave', stopDrag);
 
-            let touchStartDistance = 0, initialScale = 1, touchStartX = 0, touchTime = 0;
+            let touchStartDistance = 0, initialScale = 1, touchStartX = 0, touchTime = 0, lastTap = 0;
             pane.viewport.addEventListener('touchstart', (e) => {
                 if (!pdfDoc) return;
+                const now = Date.now();
                 if (e.touches.length === 1) {
+                    // Double Tap Smart Zoom
+                    if (now - lastTap < 300) {
+                        e.preventDefault();
+                        const viewWidth = pane.viewport.clientWidth;
+                        const fitScale = (viewWidth - 40) / pane.canvas.width;
+                        if (pane.scale > fitScale * 1.2) resetZoom(paneId);
+                        else {
+                            pane.scale = fitScale * 1.8;
+                            const rect = pane.viewport.getBoundingClientRect();
+                            const px = ((e.touches[0].clientX - rect.left) - pane.x) / (pane.scale / 1.8);
+                            const py = ((e.touches[0].clientY - rect.top) - pane.y) / (pane.scale / 1.8);
+                            pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (pane.viewport.clientHeight / 2) - (py * pane.scale);
+                            applyTransform(paneId);
+                        }
+                    }
+                    lastTap = now;
                     pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
                     touchStartX = e.touches[0].clientX; pane.startX = touchStartX - pane.x; pane.startY = e.touches[0].clientY - pane.y;
-                    touchTime = Date.now();
+                    touchTime = now;
                 } else if (e.touches.length === 2) {
-                    pane.isDragging = false; touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    initialScale = pane.scale;
+                    pane.isDragging = false; touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialScale = pane.scale;
                 }
             }, { passive: false });
 
@@ -597,28 +536,25 @@
                     pane.x = e.touches[0].clientX - pane.startX; pane.y = e.touches[0].clientY - pane.startY; applyTransform(paneId);
                 } else if (e.touches.length === 2) {
                     const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                    let newScale = initialScale * (currentDistance / touchStartDistance);
-                    if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
-                    const rect = pane.viewport.getBoundingClientRect();
-                    const centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left, centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
+                    let newScale = initialScale * (currentDistance / touchStartDistance); if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
+                    const rect = pane.viewport.getBoundingClientRect(), centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left, centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
                     const targetX = (centerX - pane.x) / pane.scale, targetY = (centerY - pane.y) / pane.scale;
-                    pane.scale = newScale; pane.x = centerX - (targetX * pane.scale); pane.y = centerY - (targetY * pane.scale);
-                    applyTransform(paneId);
+                    pane.scale = newScale; pane.x = centerX - (targetX * pane.scale); pane.y = centerY - (targetY * pane.scale); applyTransform(paneId);
                 }
             }, { passive: false });
 
             pane.viewport.addEventListener('touchend', (e) => {
                 if (!pdfDoc) return;
-                if (e.changedTouches.length === 1 && pane.isDragging) {
-                    const deltaX = e.changedTouches[0].clientX - touchStartX;
-                    if (Math.abs(deltaX) > 80 && (Date.now() - touchTime) < 300) {
-                        if (deltaX > 0) changePage(paneId, -1); else changePage(paneId, 1);
-                    }
-                }
                 pane.isDragging = false; pane.wrapper.classList.remove('is-dragging');
             });
         }
         setupPanZoom('left'); setupPanZoom('right');
+
+        function toggleEmptyState(show, isCompletelyEmpty = false) {
+            const overlay = document.getElementById('empty-state-overlay'); const msgEl = document.getElementById('empty-state-msg');
+            if (show) { overlay.classList.remove('hidden'); msgEl.textContent = isCompletelyEmpty ? "Your library is empty. Upload your first PDF." : "Please select a book."; } 
+            else { overlay.classList.add('hidden'); }
+        }
 
         function clearCanvases() {
             ['left', 'right'].forEach(id => {
@@ -630,7 +566,7 @@
 
         async function loadBookToView(id) {
             currentBookId = id;
-            const books = await getBooks(); const book = books.find(b => b.id === id);
+            const book = await getBookFull(id);
             if (!book) return;
 
             toggleEmptyState(false);
@@ -643,20 +579,21 @@
                 ['left', 'right'].forEach(paneId => {
                     document.getElementById(`total-${paneId}`).textContent = totalPages;
                     document.getElementById(`page-${paneId}`).max = totalPages;
+                    document.getElementById(`scrubber-${paneId}`).max = totalPages;
                     clearSearch(paneId);
                 });
 
                 panes.left.pageNumPending = null; panes.right.pageNumPending = null;
-                if(panes.left.renderTask) panes.left.renderTask.cancel();
-                if(panes.right.renderTask) panes.right.renderTask.cancel();
+                if(panes.left.renderTask) panes.left.renderTask.cancel(); if(panes.right.renderTask) panes.right.renderTask.cancel();
 
-                const ansPage = book.answerStartPage && book.answerStartPage > 1 ? book.answerStartPage : 1;
+                // Pull saved pages or default
+                let savedLeft = parseInt(localStorage.getItem('study_pg_left_' + currentBookId)) || 1;
+                let savedRight = parseInt(localStorage.getItem('study_pg_right_' + currentBookId)) || (book.answerStartPage > 1 ? book.answerStartPage : 1);
                 
-                await renderPage('left', 1, appSettings.defaultZoom);
-                await renderPage('right', ansPage, appSettings.defaultZoom);
+                await renderPage('left', savedLeft, appSettings.defaultZoom);
+                await renderPage('right', savedRight, appSettings.defaultZoom);
 
                 if (window.innerWidth < 768 || appSettings.forceSingleView) switchMobileTab('left');
-
             } catch (err) { console.error(err); showToast("Failed to decode PDF data.", "error"); }
         }
 
@@ -666,10 +603,8 @@
             if (num < 1) num = 1; if (num > totalPages) num = totalPages;
             
             if (pane.pageRendering) { 
-                pane.pageNumPending = num; 
-                pane.zoomModePending = zoomMode; 
-                if (pane.renderTask) pane.renderTask.cancel();
-                return; 
+                pane.pageNumPending = num; pane.zoomModePending = zoomMode; 
+                if (pane.renderTask) pane.renderTask.cancel(); return; 
             }
             
             pane.pageRendering = true; document.getElementById(`loading-${paneId}`).classList.remove('hidden');
@@ -678,43 +613,31 @@
                 const page = await pdfDoc.getPage(num);
                 const viewport = page.getViewport({ scale: pane.renderScale });
                 
-                // CRITICAL MEMORY FIX: Destroy old canvas memory before allocating new space
-                pane.canvas.width = 0; 
-                pane.canvas.height = 0;
-                
+                pane.canvas.width = 0; pane.canvas.height = 0;
                 pane.canvas.height = viewport.height; pane.canvas.width = viewport.width;
                 
                 const renderContext = { canvasContext: pane.ctx, viewport: viewport };
                 pane.renderTask = page.render(renderContext);
-                
                 await pane.renderTask.promise;
                 
-                // CRITICAL MEMORY FIX 2: Release internal PDF page data from RAM
-                setTimeout(() => page.cleanup(), 50);
+                setTimeout(() => page.cleanup(), 50); // Deep memory clean
                 
-                pane.pageNum = num; document.getElementById(`page-${paneId}`).value = num;
+                pane.pageNum = num; 
+                document.getElementById(`page-${paneId}`).value = num;
+                document.getElementById(`scrubber-${paneId}`).value = num;
+                localStorage.setItem(`study_pg_${paneId}_${currentBookId}`, num); // Auto-save
                 
                 if (zoomMode === 'center' && pane.searchTarget) {
-                    let viewWidth = pane.viewport.clientWidth;
-                    if (viewWidth === 0) viewWidth = document.getElementById('main-container').clientWidth;
-                    let viewHeight = pane.viewport.clientHeight;
-                    if (viewHeight === 0) viewHeight = document.getElementById('main-container').clientHeight;
-                    
-                    const fitScale = (viewWidth - 40) / pane.canvas.width;
-                    pane.scale = fitScale * 1.1; 
+                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth;
+                    let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
+                    pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.1; 
                     const [px, py] = viewport.convertToViewportPoint(pane.searchTarget.x, pane.searchTarget.y);
                     pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
                     applyTransform(paneId); pane.searchTarget = null;
-                } else if (zoomMode === 'width') zoomToWidth(paneId);
-                else resetZoom(paneId);
-            } catch (err) { 
-                if (err.name !== 'RenderingCancelledException') console.error("Render Error:", err); 
-            } 
+                } else if (zoomMode === 'width') zoomToWidth(paneId); else resetZoom(paneId);
+            } catch (err) { if (err.name !== 'RenderingCancelledException') console.error(err); } 
             finally {
-                pane.pageRendering = false; 
-                pane.renderTask = null;
-                document.getElementById(`loading-${paneId}`).classList.add('hidden');
-                
+                pane.pageRendering = false; pane.renderTask = null; document.getElementById(`loading-${paneId}`).classList.add('hidden');
                 if (pane.pageNumPending !== null) {
                     const nextNum = pane.pageNumPending, nextZoom = pane.zoomModePending || appSettings.defaultZoom;
                     pane.pageNumPending = null; pane.zoomModePending = null; renderPage(paneId, nextNum, nextZoom);
@@ -723,12 +646,18 @@
         }
 
         function changePage(paneId, offset) {
-            const current = panes[paneId].pageNum; let next = current + offset;
+            let next = panes[paneId].pageNum + offset;
             if (next >= 1 && next <= totalPages) renderPage(paneId, next, appSettings.defaultZoom);
         }
 
         ['left', 'right'].forEach(paneId => {
             document.getElementById(`page-${paneId}`).addEventListener('change', (e) => {
+                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom);
+            });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => {
+                const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val;
+            });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => {
                 const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom);
             });
         });
@@ -737,125 +666,92 @@
             const query = document.getElementById('search-global').value.trim();
             if (!query || !pdfDoc) return;
             document.getElementById('search-left').value = query; document.getElementById('search-right').value = query;
-            document.getElementById('btn-global-search').disabled = true; document.getElementById('search-global').disabled = true;
-            try { 
-                await executeSearchAll('left', query); 
-                await executeSearchAll('right', query); 
-            } 
-            finally { document.getElementById('btn-global-search').disabled = false; document.getElementById('search-global').disabled = false; }
+            try { await executeSearchAll('left', query); await executeSearchAll('right', query); } catch(e){}
         }
-        document.getElementById('search-global').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeGlobalSearch(); });
 
         async function executeSearchAll(paneId, overrideQuery = null) {
             if (!pdfDoc || !currentBookId) return;
             const pane = panes[paneId];
-            
-            const inputEl = document.getElementById(`search-${paneId}`);
-            const selectEl = document.getElementById(`search-results-${paneId}`);
-            const btnSearch = document.getElementById(`btn-search-${paneId}`);
-            const btnClear = document.getElementById(`btn-clear-${paneId}`);
+            const inputEl = document.getElementById(`search-${paneId}`), selectEl = document.getElementById(`search-results-${paneId}`);
+            const btnSearch = document.getElementById(`btn-search-${paneId}`), btnClear = document.getElementById(`btn-clear-${paneId}`);
             const statusEl = document.getElementById(`status-${paneId}`);
             
             const rawQuery = (overrideQuery !== null ? overrideQuery : inputEl.value).trim().toLowerCase();
             if (!rawQuery) { clearSearch(paneId); return; }
-            
             const normalizedQuery = rawQuery.replace(/\s+/g, '');
             
-            inputEl.disabled = true; btnSearch.disabled = true;
-            statusEl.textContent = "Scanning...";
+            inputEl.disabled = true; btnSearch.disabled = true; statusEl.textContent = "Scanning...";
             
             let startPage = 1;
-            const answersOnlyCheckbox = document.getElementById(`answers-only-${paneId}`);
-            if (answersOnlyCheckbox && answersOnlyCheckbox.checked) {
-                const books = await getBooks(); const book = books.find(b => b.id === currentBookId);
+            if (document.getElementById(`answers-only-${paneId}`).checked) {
+                const books = await getBooksMetadata(); const book = books.find(b => b.id === currentBookId);
                 if (book && book.answerStartPage > 1) startPage = Math.min(book.answerStartPage, totalPages);
             }
 
             const results = [];
-
             try {
                 for (let i = startPage; i <= totalPages; i++) {
-                    const page = await pdfDoc.getPage(i);
-                    const textContent = await page.getTextContent();
+                    const page = await pdfDoc.getPage(i); const textContent = await page.getTextContent();
                     let rawText = '', itemMap = [];
                     for (let j = 0; j < textContent.items.length; j++) {
                         const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
                         for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]);
                         rawText += itemStr;
                     }
-                    
-                    let matchIndex = rawText.indexOf(normalizedQuery);
-                    let pageMatchCount = 0;
+                    let matchIndex = rawText.indexOf(normalizedQuery), pageMatchCount = 0;
                     while (matchIndex !== -1) {
-                        pageMatchCount++;
-                        const targetItem = itemMap[matchIndex];
-                        let coords = null;
-                        if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
+                        pageMatchCount++; const targetItem = itemMap[matchIndex];
+                        let coords = null; if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
                         results.push({ page: i, coords: coords, instance: pageMatchCount });
                         matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
                     }
-                    
-                    // CRITICAL MEMORY FIX 3: Yield more often so the phone processor doesn't panic
-                    if (i % 2 === 0) {
-                        statusEl.textContent = `Scanning Pg ${i}...`;
-                        await new Promise(r => setTimeout(r, 15));
-                    }
+                    if (i % 2 === 0) { statusEl.textContent = `Scanning Pg ${i}...`; await new Promise(r => setTimeout(r, 15)); } // Prevent Crash
                 }
                 
                 if (results.length > 0) {
                     statusEl.textContent = `${results.length} found`;
                     selectEl.innerHTML = `<option value="">Select a match...</option>`;
                     results.forEach((res, index) => {
-                        const opt = document.createElement('option');
-                        opt.value = JSON.stringify(res);
-                        opt.textContent = `Match ${index + 1} (Page ${res.page})`;
-                        selectEl.appendChild(opt);
+                        const opt = document.createElement('option'); opt.value = JSON.stringify(res); opt.textContent = `Match ${index + 1} (Page ${res.page})`; selectEl.appendChild(opt);
                     });
                     
                     inputEl.classList.add('hidden'); btnSearch.classList.add('hidden');
                     selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
                     
+                    pane.previousPage = pane.pageNum; // Save for snapback
+                    document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
+                    
                     jumpToSearchResult(paneId, JSON.stringify(results[0]));
                     selectEl.selectedIndex = 1;
-
                 } else {
-                    statusEl.textContent = "No matches.";
-                    inputEl.disabled = false; btnSearch.disabled = false;
+                    statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false;
                 }
-            } catch (err) { 
-                console.error(err); statusEl.textContent = "Error."; 
-                inputEl.disabled = false; btnSearch.disabled = false;
-            }
+            } catch (err) { statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; }
         }
 
         function clearSearch(paneId) {
-            document.getElementById(`search-${paneId}`).classList.remove('hidden');
-            document.getElementById(`search-${paneId}`).disabled = false;
-            document.getElementById(`search-${paneId}`).value = '';
-            document.getElementById(`btn-search-${paneId}`).classList.remove('hidden');
-            document.getElementById(`btn-search-${paneId}`).disabled = false;
-            
-            document.getElementById(`search-results-${paneId}`).classList.add('hidden');
-            document.getElementById(`btn-clear-${paneId}`).classList.add('hidden');
-            document.getElementById(`status-${paneId}`).textContent = '';
-            panes[paneId].searchTarget = null;
+            document.getElementById(`search-${paneId}`).classList.remove('hidden'); document.getElementById(`search-${paneId}`).disabled = false; document.getElementById(`search-${paneId}`).value = '';
+            document.getElementById(`btn-search-${paneId}`).classList.remove('hidden'); document.getElementById(`btn-search-${paneId}`).disabled = false;
+            document.getElementById(`search-results-${paneId}`).classList.add('hidden'); document.getElementById(`btn-clear-${paneId}`).classList.add('hidden');
+            document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); document.getElementById(`status-${paneId}`).textContent = '';
+            panes[paneId].searchTarget = null; panes[paneId].previousPage = null;
         }
 
         window.jumpToSearchResult = (paneId, val = null) => {
-            const selectEl = document.getElementById(`search-results-${paneId}`);
-            const value = val || selectEl.value;
-            if (!value) return;
-            const res = JSON.parse(value);
-            panes[paneId].searchTarget = res.coords;
-            renderPage(paneId, res.page, 'center');
+            const selectEl = document.getElementById(`search-results-${paneId}`); const value = val || selectEl.value;
+            if (!value) return; const res = JSON.parse(value);
+            panes[paneId].searchTarget = res.coords; renderPage(paneId, res.page, 'center');
         };
 
-        ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearchAll(paneId); }); });
+        window.snapBack = (paneId) => {
+            if (panes[paneId].previousPage) { renderPage(paneId, panes[paneId].previousPage, appSettings.defaultZoom); document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); }
+        };
 
+        /* --- Settings Panel --- */
         async function populateSettings() {
             const settingsList = document.getElementById('settings-book-list'); settingsList.innerHTML = '';
-            const books = await getBooks();
-            if (books.length === 0) { settingsList.innerHTML = '<p class="text-slate-500 italic text-sm">No books in library. Add a book first.</p>'; return; }
+            const books = await getBooksMetadata(); // Does not crash RAM
+            if (books.length === 0) { settingsList.innerHTML = '<p class="text-slate-500 italic text-sm">No books in library.</p>'; return; }
             books.forEach(book => {
                 const row = document.createElement('div');
                 row.className = "flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm";
@@ -877,13 +773,11 @@
         }
 
         window.saveBookSettings = async (id) => {
-            const input = document.getElementById(`input-ans-${id}`);
-            const val = parseInt(input.value); if (isNaN(val) || val < 1) return;
-            const books = await getBooks(); const book = books.find(b => b.id === id);
+            const input = document.getElementById(`input-ans-${id}`); const val = parseInt(input.value); if (isNaN(val) || val < 1) return;
+            const book = await getBookFull(id); // Needed to save full buffer back
             if (book) {
                 book.answerStartPage = val; await saveBook(book);
-                const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button');
-                const origText = btn.textContent; btn.textContent = "Saved!"; btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
+                const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button'); const origText = btn.textContent; btn.textContent = "Saved!"; btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
                 setTimeout(() => { btn.textContent = origText; btn.classList.remove("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300"); }, 1500);
             }
         };
@@ -892,11 +786,11 @@
             customConfirm(async (confirmed) => {
                 if (confirmed) {
                     await deleteBookDB(id);
+                    localStorage.removeItem('study_pg_left_' + id); localStorage.removeItem('study_pg_right_' + id);
                     if (currentBookId === id) { currentBookId = null; pdfDoc = null; clearCanvases(); }
                     const remainingBooks = await refreshDropdown();
-                    if (remainingBooks.length === 0) toggleEmptyState(true, true);
-                    else if (!currentBookId) toggleEmptyState(true, false);
-                    await populateSettings(); showToast("Book removed from library.");
+                    if (remainingBooks.length === 0) toggleEmptyState(true, true); else if (!currentBookId) toggleEmptyState(true, false);
+                    await populateSettings(); showToast("Book removed.");
                 }
             });
         };
@@ -911,11 +805,8 @@
 
         window.addEventListener('DOMContentLoaded', async () => {
             applyTheme(); applyLayout();
-            try {
-                await initDB(); const books = await refreshDropdown();
-                if (books.length > 0) toggleEmptyState(true, false); else toggleEmptyState(true, true);
-            } catch (err) { console.error("Init Error:", err); showToast("Failed to initialize database.", "error"); }
-            
+            try { await initDB(); const books = await refreshDropdown(); if (books.length > 0) toggleEmptyState(true, false); else toggleEmptyState(true, true);
+            } catch (err) { console.error(err); }
             let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { applyLayout(); }, 150); });
         });
     </script>
