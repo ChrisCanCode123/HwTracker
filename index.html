@@ -125,6 +125,7 @@
         </div>
     </header>
 
+    <!-- Modals -->
     <div id="modal-prompt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 px-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Name Your Book</h3>
@@ -188,6 +189,7 @@
         </div>
     </div>
 
+    <!-- Main Workspace -->
     <main class="flex-1 flex w-full h-full overflow-hidden relative show-left" id="main-container">
         
         <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors px-4 text-center">
@@ -297,7 +299,24 @@
     </main>
 
     <script>
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); }); }
+        // Register Service Worker and Request Persistent Storage
+        if ('serviceWorker' in navigator) { 
+            window.addEventListener('load', () => { 
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); 
+            }); 
+        }
+
+        // Lock data to prevent Apple from deleting offline caches
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().then((persistent) => {
+                if (persistent) {
+                    console.log("Storage locked: Data will survive indefinitely offline.");
+                } else {
+                    console.log("Storage not locked: May be cleared under storage pressure.");
+                }
+            });
+        }
+
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         let db; let currentBookId = null; let pdfDoc = null; let totalPages = 0; let activePaneId = 'left';
@@ -362,7 +381,7 @@
             isImmersive = !isImmersive;
             if (isImmersive) document.body.classList.add('immersive-active');
             else document.body.classList.remove('immersive-active');
-            setTimeout(applyLayout, 50); // Recalculate zoom widths based on new window size
+            setTimeout(applyLayout, 50);
         }
 
         document.getElementById('toggle-dark-mode-settings').addEventListener('click', () => { appSettings.darkMode = !appSettings.darkMode; saveSettings(); applyTheme(); });
@@ -630,11 +649,11 @@
                     pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
                     applyTransform(paneId); pane.searchTarget = null;
                 } else if (zoomMode === 'width') {
-                    zoomToWidth(paneId);
+                    zoomToWidth(paneId); 
                 } else if (zoomMode === 'fit') {
                     resetZoom(paneId);
                 } else if (zoomMode === 'keep') {
-                    applyTransform(paneId); // Preserves your exact zoom and pan
+                    applyTransform(paneId); // Preserves exact zoom and pan
                 }
             } catch (err) { if (err.name !== 'RenderingCancelledException') console.error(err); } 
             finally {
@@ -685,18 +704,16 @@
             }
 
             const results = [];
-           try {
+            try {
                 for (let i = startPage; i <= totalPages; i++) {
                     const page = await pdfDoc.getPage(i); 
                     const textContent = await page.getTextContent();
                     
-                    // FAST PASS: Just combine the text first without mapping coordinates
                     let rawText = '';
                     for (let j = 0; j < textContent.items.length; j++) {
                         rawText += textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
                     }
                     
-                    // Only do the heavy math if the page actually contains the search term
                     if (rawText.includes(normalizedQuery)) {
                         let itemMap = [];
                         for (let j = 0; j < textContent.items.length; j++) {
@@ -716,11 +733,9 @@
                         }
                     }
                     
-                    // Free up memory immediately after checking the page
                     setTimeout(() => page.cleanup(), 5);
 
-                    // Yield much faster (every 5 pages for 1ms instead of every 2 pages for 15ms)
-                    if (i % 10 === 0) { 
+                    if (i % 5 === 0) { 
                         statusEl.textContent = `Scanning Pg ${i}...`; 
                         await new Promise(r => setTimeout(r, 1)); 
                     } 
@@ -738,9 +753,7 @@
                 } else { 
                     statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false; 
                 }
-            } catch (err) { 
-                statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; 
-            }
+            } catch (err) { statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; }
         }
 
         function clearSearch(paneId) {
