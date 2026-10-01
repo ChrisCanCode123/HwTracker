@@ -623,12 +623,19 @@
                 localStorage.setItem(`study_pg_${paneId}_${currentBookId}`, num); 
                 
                 if (zoomMode === 'center' && pane.searchTarget) {
-                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth; let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
+                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth;
+                    let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
                     pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.1; 
                     const [px, py] = viewport.convertToViewportPoint(pane.searchTarget.x, pane.searchTarget.y);
                     pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
                     applyTransform(paneId); pane.searchTarget = null;
-                } else if (zoomMode === 'width') zoomToWidth(paneId); else resetZoom(paneId);
+                } else if (zoomMode === 'width') {
+                    zoomToWidth(paneId);
+                } else if (zoomMode === 'fit') {
+                    resetZoom(paneId);
+                } else if (zoomMode === 'keep') {
+                    applyTransform(paneId); // Preserves your exact zoom and pan
+                }
             } catch (err) { if (err.name !== 'RenderingCancelledException') console.error(err); } 
             finally {
                 pane.pageRendering = false; pane.renderTask = null; document.getElementById(`loading-${paneId}`).classList.add('hidden');
@@ -641,13 +648,19 @@
 
         function changePage(paneId, offset) {
             let next = panes[paneId].pageNum + offset;
-            if (next >= 1 && next <= totalPages) renderPage(paneId, next, appSettings.defaultZoom);
+            if (next >= 1 && next <= totalPages) renderPage(paneId, next, 'keep');
         }
 
         ['left', 'right'].forEach(paneId => {
-            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => { const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom); });
-            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => { const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val; });
-            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => { const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom); });
+            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => {
+                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, 'keep');
+            });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => {
+                const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val;
+            });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => {
+                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, 'keep');
+            });
         });
 
         async function executeGlobalSearch() {
