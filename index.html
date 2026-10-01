@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Pro PDF Study Tool</title>
+    <title>Chris.PDF</title>
     
     <!-- iOS Web App Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Study Pro">
+    <meta name="apple-mobile-web-app-title" content="Chris.PDF">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="manifest" href="manifest.json">
     
@@ -20,7 +20,10 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     
     <script>
-        tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
     </script>
     
     <style>
@@ -51,6 +54,7 @@
         .loader { border: 3px solid rgba(156, 163, 175, 0.2); border-top: 3px solid #3b82f6; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        /* Mobile Single View Utility Classes */
         .single-view-mode #resizer { display: none !important; }
         .single-view-mode .pane { width: 100% !important; }
         .single-view-mode.show-left #pane-right { display: none !important; }
@@ -63,17 +67,28 @@
         input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%; background: #3b82f6; cursor: pointer; margin-top: -6px; }
         input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #cbd5e1; border-radius: 2px; }
         .dark input[type=range]::-webkit-slider-runnable-track { background: #475569; }
+
+        /* Immersive Fullscreen Mode */
+        .immersive-active header { display: none !important; }
+        .immersive-active #mobile-tab-bar { display: none !important; }
+        .immersive-active .pane-header { display: none !important; }
+        .immersive-active #btn-exit-immersive { display: flex !important; }
     </style>
 </head>
 <body class="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
     <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <!-- Exit Immersive Mode Button -->
+    <button id="btn-exit-immersive" onclick="toggleImmersive()" class="hidden fixed top-4 right-4 z-50 p-3 bg-slate-900/60 hover:bg-slate-900/90 text-white rounded-full backdrop-blur-md shadow-lg transition-all border border-slate-700" title="Exit Fullscreen">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h4V4m0 16v-4H4m16 4h-4v-4m0-12v4h4"></path></svg>
+    </button>
+
     <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 flex-shrink-0 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3 relative">
         <div class="flex items-center justify-between w-full md:w-auto">
             <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                Study Pro
+                Chris.PDF
             </h1>
             <button id="btn-mobile-menu" class="md:hidden p-2 text-slate-600 dark:text-slate-300">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
@@ -100,6 +115,9 @@
                 <button id="btn-add-book" onclick="document.getElementById('file-upload').click()" class="flex-1 md:flex-none justify-center bg-indigo-50 dark:bg-indigo-900/30 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1 border border-indigo-200 dark:border-indigo-800">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> <span>Add Book</span>
                 </button>
+                <button onclick="toggleImmersive()" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Immersive Fullscreen">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                </button>
                 <button id="btn-settings" class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </button>
@@ -107,7 +125,6 @@
         </div>
     </header>
 
-    <!-- Modals -->
     <div id="modal-prompt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 px-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-6 w-full max-w-sm border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200">
             <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Name Your Book</h3>
@@ -136,7 +153,7 @@
             <div class="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center flex-shrink-0">
                 <h2 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
-                    Study Pro Settings
+                    Chris.PDF Settings
                 </h2>
                 <button id="btn-close-settings" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -171,14 +188,13 @@
         </div>
     </div>
 
-    <!-- Main Workspace -->
     <main class="flex-1 flex w-full h-full overflow-hidden relative show-left" id="main-container">
         
         <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors px-4 text-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 text-slate-300 dark:text-slate-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
-            <h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-200 mb-2">Welcome to Study Tool Pro</h2>
+            <h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-200 mb-2">Welcome to Chris.PDF</h2>
             <p id="empty-state-msg" class="text-sm md:text-base text-slate-500 dark:text-slate-400 mb-8 max-w-md">Your library is currently empty. Click "Add Book" above to securely upload your first PDF textbook.</p>
             <button onclick="document.getElementById('file-upload').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> Upload PDF Book
@@ -187,7 +203,7 @@
 
         <!-- Left Pane -->
         <section id="pane-left" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700" style="width: 50%;">
-            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
+            <div class="pane-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
                 <div class="flex items-center gap-2 w-full">
                     <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
                     <div class="flex-1 relative flex items-center gap-1">
@@ -214,13 +230,13 @@
                 </div>
             </div>
             
-            <div id="viewport-left" class="viewport">
-                <!-- Persistent Thumb Arrows -->
-                <div class="absolute bottom-[20%] left-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('left', -1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
+            <div id="viewport-left" class="viewport group">
+                <!-- Extended Edge Hitboxes for Single Tap Page Turns -->
+                <div class="absolute inset-y-0 left-0 w-16 flex items-center justify-start pl-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('left', -1)" class="pointer-events-auto p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
                 </div>
-                <div class="absolute bottom-[20%] right-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('left', 1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
+                <div class="absolute inset-y-0 right-0 w-16 flex items-center justify-end pr-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('left', 1)" class="pointer-events-auto p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
 
                 <div id="wrapper-left" class="canvas-wrapper"><canvas id="canvas-left" class="pdf-canvas"></canvas></div>
@@ -234,7 +250,7 @@
 
         <!-- Right Pane -->
         <section id="pane-right" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
-            <div class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
+            <div class="pane-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
                 <div class="flex items-center gap-2 w-full">
                     <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers</span>
                     <div class="flex-1 relative flex items-center gap-1">
@@ -261,13 +277,13 @@
                 </div>
             </div>
             
-            <div id="viewport-right" class="viewport">
-                <!-- Persistent Thumb Arrows -->
-                <div class="absolute bottom-[20%] left-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('right', -1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
+            <div id="viewport-right" class="viewport group">
+                <!-- Extended Edge Hitboxes for Single Tap Page Turns -->
+                <div class="absolute inset-y-0 left-0 w-16 flex items-center justify-start pl-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('right', -1)" class="pointer-events-auto p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg></button>
                 </div>
-                <div class="absolute bottom-[20%] right-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
-                    <button onclick="changePage('right', 1)" class="p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
+                <div class="absolute inset-y-0 right-0 w-16 flex items-center justify-end pr-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
+                    <button onclick="changePage('right', 1)" class="pointer-events-auto p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
                 <div id="wrapper-right" class="canvas-wrapper"><canvas id="canvas-right" class="pdf-canvas"></canvas></div>
                 <div id="loading-right" class="absolute inset-0 flex items-center justify-center bg-slate-100/80 dark:bg-slate-900/80 hidden z-10 backdrop-blur-sm"><div class="loader"></div></div>
@@ -285,6 +301,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
         let db; let currentBookId = null; let pdfDoc = null; let totalPages = 0; let activePaneId = 'left';
+        let isImmersive = false;
         let appSettings = JSON.parse(localStorage.getItem('studyToolSettings')) || { darkMode: true, forceSingleView: false, defaultZoom: 'fit' };
 
         const panes = {
@@ -341,6 +358,13 @@
             if (pdfDoc) { setTimeout(() => { if (appSettings.defaultZoom === 'width') zoomToWidth(target); else resetZoom(target); }, 10); }
         }
 
+        function toggleImmersive() {
+            isImmersive = !isImmersive;
+            if (isImmersive) document.body.classList.add('immersive-active');
+            else document.body.classList.remove('immersive-active');
+            setTimeout(applyLayout, 50); // Recalculate zoom widths based on new window size
+        }
+
         document.getElementById('toggle-dark-mode-settings').addEventListener('click', () => { appSettings.darkMode = !appSettings.darkMode; saveSettings(); applyTheme(); });
         document.getElementById('toggle-single-view').addEventListener('click', () => { appSettings.forceSingleView = !appSettings.forceSingleView; saveSettings(); applyLayout(); });
         document.getElementById('select-default-zoom').addEventListener('change', (e) => { appSettings.defaultZoom = e.target.value; saveSettings(); });
@@ -376,7 +400,6 @@
             const modal = document.getElementById(id); modal.classList.add('opacity-0'); modal.firstElementChild.classList.add('scale-95'); setTimeout(() => modal.classList.add('hidden'), 200);
         }
 
-        /* --- DATABASE LOGIC (MEMORY SPIKE FIXED) --- */
         const DB_NAME = 'PDFStudyLibrary'; const DB_VERSION = 1; const STORE_NAME = 'books';
         async function initDB() {
             return new Promise((resolve, reject) => {
@@ -387,19 +410,13 @@
             });
         }
         
-        // Use a cursor to get ONLY the titles and avoid pulling 500MB PDFs into RAM
         function getBooksMetadata() {
             return new Promise((resolve, reject) => {
-                const tx = db.transaction([STORE_NAME], "readonly");
-                const store = tx.objectStore(STORE_NAME);
-                const req = store.openCursor();
-                const books = [];
+                const tx = db.transaction([STORE_NAME], "readonly"); const store = tx.objectStore(STORE_NAME); const req = store.openCursor(); const books = [];
                 req.onsuccess = (e) => {
                     const cursor = e.target.result;
-                    if (cursor) {
-                        books.push({ id: cursor.value.id, name: cursor.value.name, answerStartPage: cursor.value.answerStartPage });
-                        cursor.continue();
-                    } else { resolve(books); }
+                    if (cursor) { books.push({ id: cursor.value.id, name: cursor.value.name, answerStartPage: cursor.value.answerStartPage }); cursor.continue(); } 
+                    else { resolve(books); }
                 };
                 req.onerror = () => reject();
             });
@@ -437,7 +454,7 @@
 
         async function refreshDropdown() {
             const select = document.getElementById('book-selector'); 
-            const books = await getBooksMetadata(); // Safe memory call
+            const books = await getBooksMetadata(); 
             select.innerHTML = '<option value="">Select a book...</option>';
             books.forEach(b => {
                 const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name;
@@ -506,25 +523,18 @@
                 if (!pdfDoc) return;
                 const now = Date.now();
                 if (e.touches.length === 1) {
-                    // Double Tap Smart Zoom
                     if (now - lastTap < 300) {
                         e.preventDefault();
-                        const viewWidth = pane.viewport.clientWidth;
-                        const fitScale = (viewWidth - 40) / pane.canvas.width;
+                        const viewWidth = pane.viewport.clientWidth; const fitScale = (viewWidth - 40) / pane.canvas.width;
                         if (pane.scale > fitScale * 1.2) resetZoom(paneId);
                         else {
-                            pane.scale = fitScale * 1.8;
-                            const rect = pane.viewport.getBoundingClientRect();
-                            const px = ((e.touches[0].clientX - rect.left) - pane.x) / (pane.scale / 1.8);
-                            const py = ((e.touches[0].clientY - rect.top) - pane.y) / (pane.scale / 1.8);
-                            pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (pane.viewport.clientHeight / 2) - (py * pane.scale);
-                            applyTransform(paneId);
+                            pane.scale = fitScale * 1.8; const rect = pane.viewport.getBoundingClientRect();
+                            const px = ((e.touches[0].clientX - rect.left) - pane.x) / (pane.scale / 1.8); const py = ((e.touches[0].clientY - rect.top) - pane.y) / (pane.scale / 1.8);
+                            pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (pane.viewport.clientHeight / 2) - (py * pane.scale); applyTransform(paneId);
                         }
                     }
-                    lastTap = now;
-                    pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
-                    touchStartX = e.touches[0].clientX; pane.startX = touchStartX - pane.x; pane.startY = e.touches[0].clientY - pane.y;
-                    touchTime = now;
+                    lastTap = now; pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
+                    touchStartX = e.touches[0].clientX; pane.startX = touchStartX - pane.x; pane.startY = e.touches[0].clientY - pane.y; touchTime = now;
                 } else if (e.touches.length === 2) {
                     pane.isDragging = false; touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialScale = pane.scale;
                 }
@@ -544,8 +554,7 @@
             }, { passive: false });
 
             pane.viewport.addEventListener('touchend', (e) => {
-                if (!pdfDoc) return;
-                pane.isDragging = false; pane.wrapper.classList.remove('is-dragging');
+                if (!pdfDoc) return; pane.isDragging = false; pane.wrapper.classList.remove('is-dragging');
             });
         }
         setupPanZoom('left'); setupPanZoom('right');
@@ -559,15 +568,12 @@
         function clearCanvases() {
             ['left', 'right'].forEach(id => {
                 panes[id].ctx.clearRect(0, 0, panes[id].canvas.width, panes[id].canvas.height);
-                document.getElementById(`total-${id}`).textContent = '?'; document.getElementById(`page-${id}`).value = 1;
-                clearSearch(id);
+                document.getElementById(`total-${id}`).textContent = '?'; document.getElementById(`page-${id}`).value = 1; clearSearch(id);
             });
         }
 
         async function loadBookToView(id) {
-            currentBookId = id;
-            const book = await getBookFull(id);
-            if (!book) return;
+            currentBookId = id; const book = await getBookFull(id); if (!book) return;
 
             toggleEmptyState(false);
             document.getElementById('loading-left').classList.remove('hidden'); document.getElementById('loading-right').classList.remove('hidden');
@@ -578,21 +584,16 @@
 
                 ['left', 'right'].forEach(paneId => {
                     document.getElementById(`total-${paneId}`).textContent = totalPages;
-                    document.getElementById(`page-${paneId}`).max = totalPages;
-                    document.getElementById(`scrubber-${paneId}`).max = totalPages;
-                    clearSearch(paneId);
+                    document.getElementById(`page-${paneId}`).max = totalPages; document.getElementById(`scrubber-${paneId}`).max = totalPages; clearSearch(paneId);
                 });
 
                 panes.left.pageNumPending = null; panes.right.pageNumPending = null;
                 if(panes.left.renderTask) panes.left.renderTask.cancel(); if(panes.right.renderTask) panes.right.renderTask.cancel();
 
-                // Pull saved pages or default
                 let savedLeft = parseInt(localStorage.getItem('study_pg_left_' + currentBookId)) || 1;
                 let savedRight = parseInt(localStorage.getItem('study_pg_right_' + currentBookId)) || (book.answerStartPage > 1 ? book.answerStartPage : 1);
                 
-                await renderPage('left', savedLeft, appSettings.defaultZoom);
-                await renderPage('right', savedRight, appSettings.defaultZoom);
-
+                await renderPage('left', savedLeft, appSettings.defaultZoom); await renderPage('right', savedRight, appSettings.defaultZoom);
                 if (window.innerWidth < 768 || appSettings.forceSingleView) switchMobileTab('left');
             } catch (err) { console.error(err); showToast("Failed to decode PDF data.", "error"); }
         }
@@ -610,26 +611,19 @@
             pane.pageRendering = true; document.getElementById(`loading-${paneId}`).classList.remove('hidden');
             
             try {
-                const page = await pdfDoc.getPage(num);
-                const viewport = page.getViewport({ scale: pane.renderScale });
-                
-                pane.canvas.width = 0; pane.canvas.height = 0;
-                pane.canvas.height = viewport.height; pane.canvas.width = viewport.width;
+                const page = await pdfDoc.getPage(num); const viewport = page.getViewport({ scale: pane.renderScale });
+                pane.canvas.width = 0; pane.canvas.height = 0; pane.canvas.height = viewport.height; pane.canvas.width = viewport.width;
                 
                 const renderContext = { canvasContext: pane.ctx, viewport: viewport };
-                pane.renderTask = page.render(renderContext);
-                await pane.renderTask.promise;
+                pane.renderTask = page.render(renderContext); await pane.renderTask.promise;
                 
-                setTimeout(() => page.cleanup(), 50); // Deep memory clean
+                setTimeout(() => page.cleanup(), 50); 
                 
-                pane.pageNum = num; 
-                document.getElementById(`page-${paneId}`).value = num;
-                document.getElementById(`scrubber-${paneId}`).value = num;
-                localStorage.setItem(`study_pg_${paneId}_${currentBookId}`, num); // Auto-save
+                pane.pageNum = num; document.getElementById(`page-${paneId}`).value = num; document.getElementById(`scrubber-${paneId}`).value = num;
+                localStorage.setItem(`study_pg_${paneId}_${currentBookId}`, num); 
                 
                 if (zoomMode === 'center' && pane.searchTarget) {
-                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth;
-                    let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
+                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth; let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
                     pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.1; 
                     const [px, py] = viewport.convertToViewportPoint(pane.searchTarget.x, pane.searchTarget.y);
                     pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
@@ -651,35 +645,24 @@
         }
 
         ['left', 'right'].forEach(paneId => {
-            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => {
-                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom);
-            });
-            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => {
-                const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val;
-            });
-            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => {
-                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom);
-            });
+            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => { const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom); });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => { const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val; });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => { const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, appSettings.defaultZoom); });
         });
 
         async function executeGlobalSearch() {
-            const query = document.getElementById('search-global').value.trim();
-            if (!query || !pdfDoc) return;
+            const query = document.getElementById('search-global').value.trim(); if (!query || !pdfDoc) return;
             document.getElementById('search-left').value = query; document.getElementById('search-right').value = query;
             try { await executeSearchAll('left', query); await executeSearchAll('right', query); } catch(e){}
         }
 
         async function executeSearchAll(paneId, overrideQuery = null) {
             if (!pdfDoc || !currentBookId) return;
-            const pane = panes[paneId];
-            const inputEl = document.getElementById(`search-${paneId}`), selectEl = document.getElementById(`search-results-${paneId}`);
-            const btnSearch = document.getElementById(`btn-search-${paneId}`), btnClear = document.getElementById(`btn-clear-${paneId}`);
-            const statusEl = document.getElementById(`status-${paneId}`);
+            const pane = panes[paneId]; const inputEl = document.getElementById(`search-${paneId}`), selectEl = document.getElementById(`search-results-${paneId}`);
+            const btnSearch = document.getElementById(`btn-search-${paneId}`), btnClear = document.getElementById(`btn-clear-${paneId}`), statusEl = document.getElementById(`status-${paneId}`);
             
             const rawQuery = (overrideQuery !== null ? overrideQuery : inputEl.value).trim().toLowerCase();
-            if (!rawQuery) { clearSearch(paneId); return; }
-            const normalizedQuery = rawQuery.replace(/\s+/g, '');
-            
+            if (!rawQuery) { clearSearch(paneId); return; } const normalizedQuery = rawQuery.replace(/\s+/g, '');
             inputEl.disabled = true; btnSearch.disabled = true; statusEl.textContent = "Scanning...";
             
             let startPage = 1;
@@ -695,37 +678,27 @@
                     let rawText = '', itemMap = [];
                     for (let j = 0; j < textContent.items.length; j++) {
                         const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
-                        for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]);
-                        rawText += itemStr;
+                        for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]); rawText += itemStr;
                     }
                     let matchIndex = rawText.indexOf(normalizedQuery), pageMatchCount = 0;
                     while (matchIndex !== -1) {
                         pageMatchCount++; const targetItem = itemMap[matchIndex];
                         let coords = null; if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
-                        results.push({ page: i, coords: coords, instance: pageMatchCount });
-                        matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
+                        results.push({ page: i, coords: coords, instance: pageMatchCount }); matchIndex = rawText.indexOf(normalizedQuery, matchIndex + normalizedQuery.length);
                     }
-                    if (i % 2 === 0) { statusEl.textContent = `Scanning Pg ${i}...`; await new Promise(r => setTimeout(r, 15)); } // Prevent Crash
+                    if (i % 2 === 0) { statusEl.textContent = `Scanning Pg ${i}...`; await new Promise(r => setTimeout(r, 15)); } 
                 }
                 
                 if (results.length > 0) {
-                    statusEl.textContent = `${results.length} found`;
-                    selectEl.innerHTML = `<option value="">Select a match...</option>`;
+                    statusEl.textContent = `${results.length} found`; selectEl.innerHTML = `<option value="">Select a match...</option>`;
                     results.forEach((res, index) => {
                         const opt = document.createElement('option'); opt.value = JSON.stringify(res); opt.textContent = `Match ${index + 1} (Page ${res.page})`; selectEl.appendChild(opt);
                     });
                     
-                    inputEl.classList.add('hidden'); btnSearch.classList.add('hidden');
-                    selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
-                    
-                    pane.previousPage = pane.pageNum; // Save for snapback
-                    document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
-                    
-                    jumpToSearchResult(paneId, JSON.stringify(results[0]));
-                    selectEl.selectedIndex = 1;
-                } else {
-                    statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false;
-                }
+                    inputEl.classList.add('hidden'); btnSearch.classList.add('hidden'); selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
+                    pane.previousPage = pane.pageNum; document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
+                    jumpToSearchResult(paneId, JSON.stringify(results[0])); selectEl.selectedIndex = 1;
+                } else { statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false; }
             } catch (err) { statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; }
         }
 
@@ -747,10 +720,10 @@
             if (panes[paneId].previousPage) { renderPage(paneId, panes[paneId].previousPage, appSettings.defaultZoom); document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); }
         };
 
-        /* --- Settings Panel --- */
+        ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearchAll(paneId); }); });
+
         async function populateSettings() {
-            const settingsList = document.getElementById('settings-book-list'); settingsList.innerHTML = '';
-            const books = await getBooksMetadata(); // Does not crash RAM
+            const settingsList = document.getElementById('settings-book-list'); settingsList.innerHTML = ''; const books = await getBooksMetadata(); 
             if (books.length === 0) { settingsList.innerHTML = '<p class="text-slate-500 italic text-sm">No books in library.</p>'; return; }
             books.forEach(book => {
                 const row = document.createElement('div');
@@ -758,10 +731,7 @@
                 row.innerHTML = `
                     <div class="flex-1 mr-4 overflow-hidden">
                         <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate" title="${book.name}">${book.name}</h3>
-                        <div class="flex items-center gap-2 mt-2">
-                            <label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Answers Start Pg:</label>
-                            <input type="number" min="1" id="input-ans-${book.id}" value="${book.answerStartPage || 1}" class="w-20 px-2 py-1 text-xs border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500">
-                        </div>
+                        <div class="flex items-center gap-2 mt-2"><label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Answers Start Pg:</label><input type="number" min="1" id="input-ans-${book.id}" value="${book.answerStartPage || 1}" class="w-20 px-2 py-1 text-xs border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"></div>
                     </div>
                     <div class="flex flex-col gap-2 flex-shrink-0">
                         <button onclick="saveBookSettings('${book.id}')" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded text-xs font-semibold">Save</button>
@@ -774,7 +744,7 @@
 
         window.saveBookSettings = async (id) => {
             const input = document.getElementById(`input-ans-${id}`); const val = parseInt(input.value); if (isNaN(val) || val < 1) return;
-            const book = await getBookFull(id); // Needed to save full buffer back
+            const book = await getBookFull(id); 
             if (book) {
                 book.answerStartPage = val; await saveBook(book);
                 const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button'); const origText = btn.textContent; btn.textContent = "Saved!"; btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
@@ -785,8 +755,7 @@
         window.deleteBookAction = (id) => {
             customConfirm(async (confirmed) => {
                 if (confirmed) {
-                    await deleteBookDB(id);
-                    localStorage.removeItem('study_pg_left_' + id); localStorage.removeItem('study_pg_right_' + id);
+                    await deleteBookDB(id); localStorage.removeItem('study_pg_left_' + id); localStorage.removeItem('study_pg_right_' + id);
                     if (currentBookId === id) { currentBookId = null; pdfDoc = null; clearCanvases(); }
                     const remainingBooks = await refreshDropdown();
                     if (remainingBooks.length === 0) toggleEmptyState(true, true); else if (!currentBookId) toggleEmptyState(true, false);
