@@ -638,6 +638,12 @@
                 
                 setTimeout(() => page.cleanup(), 50); 
                 
+                // Memory-Safe Sideloading: Fetch adjacent page data into memory without drawing canvases
+                setTimeout(() => {
+                    if (num < totalPages) pdfDoc.getPage(num + 1).catch(()=>{});
+                    if (num > 1) pdfDoc.getPage(num - 1).catch(()=>{});
+                }, 200);
+
                 pane.pageNum = num; document.getElementById(`page-${paneId}`).value = num; document.getElementById(`scrubber-${paneId}`).value = num;
                 localStorage.setItem(`study_pg_${paneId}_${currentBookId}`, num); 
                 
