@@ -299,27 +299,47 @@
     </main>
 
     <script>
-        // --- SECURITY LOCKDOWN ---
+    // --- SECURITY LOCKDOWN ---
         const MASTER_PIN = "7788"; // The secret key for your links
         
-        // 1. Look for the key in the link
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('pin') === MASTER_PIN) {
-            localStorage.setItem('chris_pdf_authorized', 'true'); // Unlock this specific phone
-            window.history.replaceState({}, document.title, window.location.pathname); // Instantly erase the PIN from the URL and history
-        }
-
-        // 2. Block unauthorized phones
+        // 1. Check if the phone is already unlocked
         if (localStorage.getItem('chris_pdf_authorized') !== 'true') {
-            document.body.innerHTML = '<div style="display:flex; height:100vh; align-items:center; justify-content:center; background:#0f172a; color:#f1f5f9;"><h2>Access Denied.</h2></div>';
-            throw new Error("Unauthorized"); 
+            
+            // 2. If locked, check if the PIN is in the URL (for automatic unlocking)
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('pin') === MASTER_PIN) {
+                localStorage.setItem('chris_pdf_authorized', 'true');
+                window.history.replaceState({}, document.title, window.location.pathname);
+                location.reload(); // Instantly reload to start the app
+            } else {
+                // 3. If no PIN in URL, show a professional Passcode Screen
+                document.body.innerHTML = `
+                    <div style="display:flex; height:100vh; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; font-family:sans-serif; background:#0f172a; color:#f1f5f9;">
+                        <h2 style="margin-bottom: 10px;">Chris.PDF Locked</h2>
+                        <p style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Enter your client access code to continue.</p>
+                        <input type="password" id="pin-input" style="padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; text-align: center; margin-bottom: 16px; font-size: 18px; width: 220px;" placeholder="Enter PIN">
+                        <button onclick="checkPin()" style="padding: 12px 24px; border-radius: 8px; background: #3b82f6; color: white; border: none; font-weight: bold; cursor: pointer; width: 220px; transition: background 0.2s;">Unlock App</button>
+                        <script>
+                            function checkPin() {
+                                if (document.getElementById('pin-input').value === '${MASTER_PIN}') {
+                                    localStorage.setItem('chris_pdf_authorized', 'true');
+                                    location.reload();
+                                } else {
+                                    alert('Incorrect access code.');
+                                }
+                            }
+                        <\/script>
+                    </div>`;
+                throw new Error("Unauthorized access stopped."); 
+            }
         }
 
-        // 3. The Safari Trap (Force Home Screen Install)
+        // 4. The Safari Trap (Forces Home Screen Install)
         if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
-            document.body.innerHTML = '<div style="display:flex; height:100vh; align-items:center; justify-content:center; text-align:center; padding:20px; background:#f1f5f9; color:#0f172a;"><h2>App Locked.<br><br>Tap the Share icon at the bottom of Safari and select "Add to Home Screen" to install and unlock your app.</h2></div>';
+            document.body.innerHTML = '<div style="display:flex; height:100vh; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; font-family:sans-serif; background:#f1f5f9; color:#0f172a;"><h2>App Locked.</h2><p style="margin-top:10px; color:#64748b;">Tap the Share icon at the bottom of Safari and select <b>"Add to Home Screen"</b> to install and unlock.</p></div>';
             throw new Error("Must be installed to Home Screen");
         }
+        // -------------------------
         // -------------------------
         // Register Service Worker and Request Persistent Storage
         if ('serviceWorker' in navigator) { 
