@@ -299,6 +299,28 @@
     </main>
 
     <script>
+        // --- SECURITY LOCKDOWN ---
+        const MASTER_PIN = "7788"; // The secret key for your links
+        
+        // 1. Look for the key in the link
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('pin') === MASTER_PIN) {
+            localStorage.setItem('chris_pdf_authorized', 'true'); // Unlock this specific phone
+            window.history.replaceState({}, document.title, window.location.pathname); // Instantly erase the PIN from the URL and history
+        }
+
+        // 2. Block unauthorized phones
+        if (localStorage.getItem('chris_pdf_authorized') !== 'true') {
+            document.body.innerHTML = '<div style="display:flex; height:100vh; align-items:center; justify-content:center; background:#0f172a; color:#f1f5f9;"><h2>Access Denied.</h2></div>';
+            throw new Error("Unauthorized"); 
+        }
+
+        // 3. The Safari Trap (Force Home Screen Install)
+        if (!window.matchMedia('(display-mode: standalone)').matches && !window.navigator.standalone) {
+            document.body.innerHTML = '<div style="display:flex; height:100vh; align-items:center; justify-content:center; text-align:center; padding:20px; background:#f1f5f9; color:#0f172a;"><h2>App Locked.<br><br>Tap the Share icon at the bottom of Safari and select "Add to Home Screen" to install and unlock your app.</h2></div>';
+            throw new Error("Must be installed to Home Screen");
+        }
+        // -------------------------
         // Register Service Worker and Request Persistent Storage
         if ('serviceWorker' in navigator) { 
             window.addEventListener('load', () => { 
