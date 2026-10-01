@@ -720,7 +720,7 @@
                     setTimeout(() => page.cleanup(), 5);
 
                     // Yield much faster (every 5 pages for 1ms instead of every 2 pages for 15ms)
-                    if (i % 5 === 0) { 
+                    if (i % 10 === 0) { 
                         statusEl.textContent = `Scanning Pg ${i}...`; 
                         await new Promise(r => setTimeout(r, 1)); 
                     } 
