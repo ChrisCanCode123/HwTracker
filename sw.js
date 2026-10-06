@@ -1,4 +1,4 @@
-const CACHE_NAME = 'chris-pdf-v3';
+const CACHE_NAME = 'chris-pdf-v4';
 
 // We must explicitly list every external file to guarantee offline survival
 const CORE_ASSETS = [
