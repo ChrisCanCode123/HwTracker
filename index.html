@@ -153,7 +153,7 @@
             </div>
         </div>
 
-        <div id="header-controls" class="hidden md:flex flex-col md:flex-row items-center gap-3 w-full justify-between mt-3 md:mt-0">
+        <div id="header-controls" class="hidden md:flex flex-col md:flex-row items-center gap-3 w-full justify-between mt-3 md:mt-0 pb-2 md:pb-0">
             <select id="book-selector" class="w-full md:w-auto flex-shrink-0 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 min-w-[150px]">
                 <option value="">Select a book...</option>
             </select>
@@ -168,26 +168,29 @@
                 <button onclick="executeGlobalSearch()" class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50">Search</button>
             </div>
 
-            <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+            <div class="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto">
                 <select id="quick-jump-dropdown" onchange="jumpToQuickIndex(this.value)" class="hidden w-full md:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-semibold text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2">
                     <option value="">Quick Jump...</option>
                 </select>
 
                 <input type="file" id="file-upload" accept="application/pdf" class="hidden">
-                <button onclick="document.getElementById('file-upload').click()" class="flex-1 md:flex-none justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-1 border border-slate-300 dark:border-slate-600">
+                
+                <!-- These buttons will now show inside the mobile menu properly -->
+                <button onclick="document.getElementById('file-upload').click()" class="flex flex-1 md:flex-none justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors items-center gap-1 border border-slate-300 dark:border-slate-600">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> 
                     <span>Add Book</span>
                 </button>
                 
-                <button onclick="toggleLayoutQuick()" class="hidden md:flex p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Toggle Split/Single View">
+                <button onclick="toggleLayoutQuick()" class="hidden md:flex p-2 rounded-lg md:rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 md:bg-transparent md:border-transparent" title="Toggle Split/Single View">
                     <svg class="icon-split h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h2m8-16h2a2 2 0 012 2v12a2 2 0 01-2 2h-2M9 5v16M15 5v16" /></svg>
                     <svg class="icon-single h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
                 </button>
 
-                <button onclick="toggleImmersive()" class="hidden md:flex p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Fullscreen">
+                <button onclick="toggleImmersive()" class="flex flex-1 md:flex-none justify-center p-2 rounded-lg md:rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 md:bg-transparent md:border-transparent" title="Fullscreen">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                 </button>
-                <button onclick="openSettings()" class="hidden md:flex p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors" title="Settings">
+
+                <button onclick="openSettings()" class="flex flex-1 md:flex-none justify-center p-2 rounded-lg md:rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 md:bg-transparent md:border-transparent" title="Settings">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                 </button>
             </div>
@@ -225,7 +228,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     Settings
                 </h2>
-                <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-2 -mr-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
             </div>
@@ -295,15 +298,16 @@
                 <div class="flex flex-col gap-1 mt-1">
                     <div class="flex items-center justify-between w-full">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                            <button onclick="changePage('left', -1)" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Previous Page">&lsaquo;</button>
-                            <span class="mx-1">Pg</span> <input type="number" id="page-left" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:border-blue-500">
+                            <!-- Increased thumb padding here (px-3 py-2) -->
+                            <button onclick="changePage('left', -1)" class="px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Previous Page">&lsaquo;</button>
+                            <span class="mx-1">Pg</span> <input type="number" id="page-left" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-1 focus:outline-none focus:border-blue-500">
                             <span class="mr-1">/ <span id="total-left">?</span></span>
-                            <button onclick="changePage('left', 1)" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Next Page">&rsaquo;</button>
+                            <button onclick="changePage('left', 1)" class="px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Next Page">&rsaquo;</button>
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400"><input type="checkbox" id="answers-only-left" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-600"> Ans Only</label>
                             <span id="status-left" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></span>
-                            <button onclick="resetZoom('left')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Fit Screen">
+                            <button onclick="resetZoom('left')" class="p-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Fit Screen">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                             </button>
                         </div>
@@ -347,15 +351,15 @@
                 <div class="flex flex-col gap-1 mt-1">
                     <div class="flex items-center justify-between w-full">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                            <button onclick="changePage('right', -1)" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Previous Page">&lsaquo;</button>
-                            <span class="mx-1">Pg</span> <input type="number" id="page-right" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-0.5 focus:outline-none focus:border-blue-500">
+                            <button onclick="changePage('right', -1)" class="px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Previous Page">&lsaquo;</button>
+                            <span class="mx-1">Pg</span> <input type="number" id="page-right" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-1 focus:outline-none focus:border-blue-500">
                             <span class="mr-1">/ <span id="total-right">?</span></span>
-                            <button onclick="changePage('right', 1)" class="p-1 px-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Next Page">&rsaquo;</button>
+                            <button onclick="changePage('right', 1)" class="px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Next Page">&rsaquo;</button>
                         </div>
                         <div class="flex items-center gap-2">
                             <label class="flex items-center gap-1 cursor-pointer text-xs font-semibold text-blue-600 dark:text-blue-400"><input type="checkbox" id="answers-only-right" class="rounded text-blue-600 focus:ring-blue-500 bg-white dark:bg-slate-900 border-blue-300 dark:border-blue-700" checked> Ans Only</label>
                             <span id="status-right" class="text-xs font-semibold text-slate-500"></span>
-                            <button onclick="resetZoom('right')" class="p-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Fit Screen">
+                            <button onclick="resetZoom('right')" class="p-2 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors" title="Fit Screen">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                             </button>
                         </div>
@@ -377,9 +381,9 @@
         </section>
         
         <!-- INTUITIVE MOBILE TAB BAR -->
-        <div id="mobile-tab-bar" class="hidden absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/90 dark:bg-slate-700/90 backdrop-blur-md p-1.5 rounded-full shadow-2xl z-40 border border-slate-700 dark:border-slate-600 flex items-center w-[280px]">
-            <button onclick="switchMobileTab('left')" id="tab-left" class="flex-1 py-3 px-4 text-xs font-bold uppercase rounded-full text-white bg-blue-600 shadow-inner transition-colors">Questions</button>
-            <button onclick="switchMobileTab('right')" id="tab-right" class="flex-1 py-3 px-4 text-xs font-bold uppercase rounded-full text-slate-300 hover:text-white transition-colors">Answers</button>
+        <div id="mobile-tab-bar" class="hidden absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-800/80 dark:bg-slate-900/80 backdrop-blur-xl p-1.5 rounded-full shadow-2xl z-40 border border-slate-700/50 flex items-center w-[280px]">
+            <button onclick="switchMobileTab('left')" id="tab-left" class="flex-1 py-3 px-4 text-xs font-bold uppercase rounded-full text-white bg-blue-600 shadow-md transition-colors">Questions</button>
+            <button onclick="switchMobileTab('right')" id="tab-right" class="flex-1 py-3 px-4 text-xs font-bold uppercase rounded-full text-slate-400 hover:text-white transition-colors">Answers</button>
         </div>
     </main>
 
@@ -431,8 +435,7 @@
             try { 
                 await initDB(); 
             } catch(e) {
-                alert("Database Error: Your browser is blocking local storage. Try running via Live Server or checking your privacy settings.");
-                console.error(e);
+                console.error("DB Init error:", e);
             }
             try {
                 const books = await refreshDropdown(); 
@@ -444,6 +447,9 @@
             window.addEventListener('resize', () => { 
                 clearTimeout(resizeTimer); 
                 resizeTimer = setTimeout(() => { applyLayout(); }, 150); 
+            });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => { applyLayout(); }, 200);
             });
         });
 
@@ -547,7 +553,10 @@
             
             document.getElementById('setting-search-mode').value = appSettings.searchMode;
 
-            if (window.innerWidth < 768 || appSettings.forceSingleView) {
+            // SMART LANDSCAPE DETECTION
+            const isMobilePortrait = window.innerWidth < 768 && window.matchMedia("(orientation: portrait)").matches;
+
+            if (isMobilePortrait || appSettings.forceSingleView) {
                 container.classList.add('single-view-mode');
                 if (!container.classList.contains('show-left') && !container.classList.contains('show-right')) container.classList.add('show-left');
                 tabBar.style.display = 'flex'; 
@@ -567,13 +576,13 @@
             const tabLeft = document.getElementById('tab-left'); const tabRight = document.getElementById('tab-right');
             if (target === 'left') {
                 container.classList.add('show-left'); container.classList.remove('show-right');
-                tabLeft.classList.add('bg-blue-600', 'text-white'); tabLeft.classList.remove('text-slate-300');
-                tabRight.classList.remove('bg-blue-600', 'text-white'); tabRight.classList.add('text-slate-300');
+                tabLeft.classList.add('bg-blue-600', 'text-white', 'shadow-md'); tabLeft.classList.remove('text-slate-400');
+                tabRight.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); tabRight.classList.add('text-slate-400');
                 activePaneId = 'left';
             } else {
                 container.classList.add('show-right'); container.classList.remove('show-left');
-                tabRight.classList.add('bg-blue-600', 'text-white'); tabRight.classList.remove('text-slate-300');
-                tabLeft.classList.remove('bg-blue-600', 'text-white'); tabLeft.classList.add('text-slate-300');
+                tabRight.classList.add('bg-blue-600', 'text-white', 'shadow-md'); tabRight.classList.remove('text-slate-400');
+                tabLeft.classList.remove('bg-blue-600', 'text-white', 'shadow-md'); tabLeft.classList.add('text-slate-400');
                 activePaneId = 'right';
             }
             if (pdfDoc) { setTimeout(() => { if (appSettings.defaultZoom === 'width') zoomToWidth(target); else resetZoom(target); }, 10); }
@@ -591,7 +600,7 @@
         document.getElementById('setting-search-mode').addEventListener('change', (e) => { appSettings.searchMode = e.target.value; saveSettings(); });
         
         document.getElementById('btn-mobile-menu').addEventListener('click', () => {
-            const controls = document.getElementById('header-controls'); controls.classList.toggle('hidden'); controls.classList.toggle('flex'); controls.classList.toggle('mt-4');
+            const controls = document.getElementById('header-controls'); controls.classList.toggle('hidden'); controls.classList.toggle('flex');
         });
 
         function showToast(message, type = 'info') {
@@ -605,7 +614,7 @@
             setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // Restored Custom Prompts
+        // Custom Prompts
         let promptCallback = null; let confirmCallback = null;
         function customPrompt(defaultValue, callback) {
             const modal = document.getElementById('modal-prompt'); const input = document.getElementById('prompt-input');
@@ -626,7 +635,11 @@
             populateSettings(); 
             const modal = document.getElementById('modal-settings'); modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 10);
-            document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex', 'mt-4');
+            
+            // Cleanly close the mobile menu if open
+            if(window.innerWidth < 768) {
+                document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex');
+            }
         }
 
         function closeModal(id) {
@@ -668,20 +681,24 @@
             await loadBookToView(id);
         });
 
-        // FIXED FILE UPLOAD LOGIC
+        // FILE UPLOAD LOGIC
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0];
             
-            // Replaced strict MIME type check with a forgiving .pdf extension check
             if (!file || !file.name.toLowerCase().endsWith('.pdf')) { 
                 showToast("Please select a valid PDF file.", "error"); 
                 e.target.value = '';
                 return; 
             }
             
+            // Cleanly close the mobile menu if open
+            if(window.innerWidth < 768) {
+                document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex');
+            }
+            
             customPrompt(file.name.replace(/\.pdf$/i, ''), async (bookName) => {
                 if (!bookName || !bookName.trim()) { e.target.value = ''; return; }
-                const bookId = 'book_' + Date.now(); // Using Date prevents ID collisions
+                const bookId = 'book_' + Date.now(); 
                 
                 showToast("Reading PDF file... Please wait.", "info");
                 
@@ -697,7 +714,7 @@
                     await loadBookToView(bookId);
                 } catch (err) { 
                     console.error("Save error:", err); 
-                    alert("Storage Error: Your browser blocked saving the file. It may be too large for local storage limits. Try running via Live Server.");
+                    alert("Storage Error: Your browser blocked saving the file. It may be too large for local storage limits.");
                 }
                 e.target.value = ''; 
             });
@@ -744,7 +761,7 @@
                 await loadAllIndices();
                 currentBookIndex = masterIndex.find(idx => idx.pageNumber === totalPages) || null;
                 
-                if (currentBookIndex) showToast(`Index Auto-Linked (${totalPages} pages)`);
+                if (currentBookIndex) showToast(`Index Linked (${totalPages} pages)`);
                 populateQuickJump();
 
                 ['left', 'right'].forEach(paneId => {
@@ -763,7 +780,7 @@
                 
                 await renderPage('left', savedLeft, appSettings.defaultZoom); 
                 await renderPage('right', savedRight, appSettings.defaultZoom);
-                if (window.innerWidth < 768 || appSettings.forceSingleView) switchMobileTab('left');
+                applyLayout();
             } catch (err) { 
                 console.error("PDF loading error:", err); 
                 showToast("Failed to load PDF.", "error"); 
@@ -952,6 +969,11 @@
             const query = document.getElementById('search-global').value.trim(); if (!query || !pdfDoc) return;
             document.getElementById('search-left').value = query; document.getElementById('search-right').value = query;
             try { await executeSearchAll('left', query); await executeSearchAll('right', query); } catch(e){}
+            
+            // Close mobile menu if open
+            if(window.innerWidth < 768) {
+                document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex');
+            }
         }
 
         async function executeSearchAll(paneId, overrideQuery = null) {
