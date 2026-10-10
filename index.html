@@ -18,11 +18,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    
-    <!-- ⬇ ADD YOUR SEPARATE INDEX FILES HERE ⬇ -->
-    <script src="./indices/book_maths-red.js"></script>
-    <script src="./indices/book_maths-blue.js"></script>
-    <!-- ⬆ ---------------------------------- ⬆ -->
 
     <script>
         tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
@@ -306,7 +301,9 @@
     <main class="flex-1 flex w-full h-full overflow-hidden relative show-left" id="main-container">
         
         <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors px-4 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 text-slate-300 dark:text-slate-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 text-slate-300 dark:text-slate-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
             <h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-200 mb-2">Welcome to Chris.PDF</h2>
             <p id="empty-state-msg" class="text-sm md:text-base text-slate-500 dark:text-slate-400 mb-8 max-w-md">Your library is currently empty. Open the menu to upload your first PDF textbook.</p>
             <button onclick="document.getElementById('file-upload').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
@@ -321,13 +318,13 @@
                 <div class="flex items-center gap-2 w-full justify-between">
                     <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
                     
-                    <!-- Search Results Nav (Only visible when search active) -->
+                    <!-- Search Results Nav -->
                     <div class="flex-1 relative flex items-center gap-1 justify-end">
-                        <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full max-w-[200px] px-2 py-1 text-sm border border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
-                        <button id="btn-clear-left" onclick="clearSearch('left')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-bold flex-shrink-0 transition-colors">
+                        <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full max-w-[200px] px-2 py-1.5 text-sm border border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
+                        <button id="btn-clear-left" onclick="clearSearch('left')" class="hidden px-2 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-bold flex-shrink-0 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
-                        <button id="btn-snap-left" onclick="snapBack('left')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
+                        <button id="btn-snap-left" onclick="snapBack('left')" class="hidden px-2 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
                     </div>
                 </div>
                 <div class="flex flex-col gap-1 mt-1">
@@ -374,11 +371,11 @@
                     
                     <!-- Search Results Nav -->
                     <div class="flex-1 relative flex items-center gap-1 justify-end">
-                        <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full max-w-[200px] px-2 py-1 text-sm border border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
-                        <button id="btn-clear-right" onclick="clearSearch('right')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-bold flex-shrink-0 transition-colors">
+                        <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full max-w-[200px] px-2 py-1.5 text-sm border border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
+                        <button id="btn-clear-right" onclick="clearSearch('right')" class="hidden px-2 py-1.5 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-bold flex-shrink-0 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
-                        <button id="btn-snap-right" onclick="snapBack('right')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
+                        <button id="btn-snap-right" onclick="snapBack('right')" class="hidden px-2 py-1.5 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
                     </div>
                 </div>
                 <div class="flex flex-col gap-1 mt-1">
@@ -422,9 +419,7 @@
 
     <script>
         if ('serviceWorker' in navigator) { 
-            window.addEventListener('load', () => { 
-                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); 
-            }); 
+            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); }); 
             navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
         }
 
@@ -441,14 +436,8 @@
         ];
         // ⬆️ -------------------------------------------------------- ⬆️
 
-        let db; 
-        let currentBookId = null; 
-        let pdfDoc = null; 
-        let totalPages = 0; 
-        let activePaneId = 'left';
-        let isImmersive = false;
-        let masterIndex = [];
-        let currentBookIndex = null;
+        let db; let currentBookId = null; let pdfDoc = null; let totalPages = 0; 
+        let activePaneId = 'left'; let isImmersive = false; let masterIndex = []; let currentBookIndex = null;
         
         let appSettings = JSON.parse(localStorage.getItem('studyToolSettings')) || { 
             darkMode: true, forceSingleView: false, defaultZoom: 'fit', searchMode: 'text' 
@@ -471,12 +460,9 @@
             
             let resizeTimer; 
             window.addEventListener('resize', () => { 
-                clearTimeout(resizeTimer); 
-                resizeTimer = setTimeout(() => { applyLayout(); }, 150); 
+                clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { applyLayout(); }, 150); 
             });
-            window.addEventListener('orientationchange', () => {
-                setTimeout(() => { applyLayout(); }, 200);
-            });
+            window.addEventListener('orientationchange', () => { setTimeout(() => { applyLayout(); }, 200); });
         });
 
         // --- DATABASE ---
@@ -544,31 +530,24 @@
             const splitIcons = document.querySelectorAll('.icon-split');
             const singleIcons = document.querySelectorAll('.icon-single');
             if (appSettings.forceSingleView) {
-                splitIcons.forEach(el => el.classList.remove('hidden'));
-                singleIcons.forEach(el => el.classList.add('hidden'));
+                splitIcons.forEach(el => el.classList.remove('hidden')); singleIcons.forEach(el => el.classList.add('hidden'));
             } else {
-                singleIcons.forEach(el => el.classList.remove('hidden'));
-                splitIcons.forEach(el => el.classList.add('hidden'));
+                singleIcons.forEach(el => el.classList.remove('hidden')); splitIcons.forEach(el => el.classList.add('hidden'));
             }
         }
 
         function toggleLayoutQuick() {
-            appSettings.forceSingleView = !appSettings.forceSingleView;
-            saveSettings(); applyLayout();
+            appSettings.forceSingleView = !appSettings.forceSingleView; saveSettings(); applyLayout();
         }
 
-        async function applyLayout() {
-            const container = document.getElementById('main-container'); 
-            const tabBar = document.getElementById('mobile-tab-bar');
-            
+        function applyLayout() {
+            const container = document.getElementById('main-container'); const tabBar = document.getElementById('mobile-tab-bar');
             updateViewToggleIcon();
 
-            if (appSettings.forceSingleView) { 
-                const toggleSV = document.getElementById('toggle-single-view');
-                if(toggleSV) { toggleSV.classList.replace('bg-slate-300', 'bg-blue-600'); toggleSV.firstElementChild.classList.add('translate-x-6'); }
-            } else { 
-                const toggleSV = document.getElementById('toggle-single-view');
-                if(toggleSV) { toggleSV.classList.replace('bg-blue-600', 'bg-slate-300'); toggleSV.firstElementChild.classList.remove('translate-x-6'); }
+            const toggleSV = document.getElementById('toggle-single-view');
+            if(toggleSV) {
+                if (appSettings.forceSingleView) { toggleSV.classList.replace('bg-slate-300', 'bg-blue-600'); toggleSV.firstElementChild.classList.add('translate-x-6'); }
+                else { toggleSV.classList.replace('bg-blue-600', 'bg-slate-300'); toggleSV.firstElementChild.classList.remove('translate-x-6'); }
             }
             
             document.getElementById('setting-search-mode').value = appSettings.searchMode;
@@ -584,9 +563,12 @@
                 container.classList.remove('single-view-mode'); tabBar.style.display = 'none';
                 document.getElementById('pane-left').style.width = '50%'; document.getElementById('pane-right').style.width = '50%';
             }
+            
             if (pdfDoc) { 
-                await renderPage('left', panes.left.pageNum, appSettings.defaultZoom); 
-                await renderPage('right', panes.right.pageNum, appSettings.defaultZoom); 
+                setTimeout(() => {
+                    if (appSettings.defaultZoom === 'width') { zoomToWidth('left'); zoomToWidth('right'); }
+                    else { resetZoom('left'); resetZoom('right'); }
+                }, 10);
             }
         }
 
@@ -618,7 +600,6 @@
         document.getElementById('toggle-single-view').addEventListener('click', () => { appSettings.forceSingleView = !appSettings.forceSingleView; saveSettings(); applyLayout(); });
         document.getElementById('setting-search-mode').addEventListener('change', (e) => { appSettings.searchMode = e.target.value; saveSettings(); });
         
-        // Mobile Drawer Management
         const drawer = document.getElementById('mobile-drawer');
         const drawerOverlay = document.getElementById('mobile-drawer-overlay');
 
@@ -642,13 +623,9 @@
             const modal = document.getElementById('search-hub-modal');
             overlay.classList.remove('hidden');
             
-            // Smart auto-select scope based on current view
             const isSingleView = document.getElementById('main-container').classList.contains('single-view-mode');
-            if (isSingleView) {
-                document.querySelector(`input[name="searchScope"][value="${activePaneId}"]`).checked = true;
-            } else {
-                document.querySelector(`input[name="searchScope"][value="both"]`).checked = true;
-            }
+            if (isSingleView) { document.querySelector(`input[name="searchScope"][value="${activePaneId}"]`).checked = true; } 
+            else { document.querySelector(`input[name="searchScope"][value="both"]`).checked = true; }
 
             setTimeout(() => {
                 overlay.classList.remove('opacity-0');
@@ -658,10 +635,8 @@
         };
 
         window.closeSearchHub = () => {
-            const overlay = document.getElementById('search-hub-overlay');
-            const modal = document.getElementById('search-hub-modal');
-            overlay.classList.add('opacity-0');
-            modal.classList.add('translate-y-full', 'md:translate-y-10', 'md:scale-95');
+            const overlay = document.getElementById('search-hub-overlay'); const modal = document.getElementById('search-hub-modal');
+            overlay.classList.add('opacity-0'); modal.classList.add('translate-y-full', 'md:translate-y-10', 'md:scale-95');
             setTimeout(() => overlay.classList.add('hidden'), 300);
         };
 
@@ -677,9 +652,7 @@
             document.getElementById('hub-input').value = ''; 
         };
 
-        document.getElementById('hub-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') executeHubSearch();
-        });
+        document.getElementById('hub-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') executeHubSearch(); });
 
 
         function showToast(message, type = 'info') {
@@ -693,7 +666,6 @@
             setTimeout(() => { toast.classList.add('translate-y-10', 'opacity-0'); setTimeout(() => toast.remove(), 300); }, 3000);
         }
 
-        // Custom Prompts
         let promptCallback = null; let confirmCallback = null;
         function customPrompt(defaultValue, callback) {
             const modal = document.getElementById('modal-prompt'); const input = document.getElementById('prompt-input');
@@ -711,8 +683,7 @@
         document.getElementById('btn-confirm-ok').addEventListener('click', () => { closeModal('modal-confirm'); if(confirmCallback) confirmCallback(true); });
 
         function openSettings() {
-            populateSettings(); 
-            const modal = document.getElementById('modal-settings'); modal.classList.remove('hidden');
+            populateSettings(); const modal = document.getElementById('modal-settings'); modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 10);
         }
 
@@ -739,8 +710,7 @@
         document.addEventListener('mouseup', () => { if (isResizing) { isResizing = false; document.body.style.cursor = ''; panes.left.wrapper.style.pointerEvents = ''; panes.right.wrapper.style.pointerEvents = ''; } });
 
         async function refreshDropdown() {
-            const select = document.getElementById('book-selector'); 
-            const books = await getBooksMetadata(); 
+            const select = document.getElementById('book-selector'); const books = await getBooksMetadata(); 
             select.innerHTML = '<option value="">Select a book...</option>';
             books.forEach(b => {
                 const opt = document.createElement('option'); opt.value = b.id; opt.textContent = b.name;
@@ -755,35 +725,23 @@
             await loadBookToView(id);
         });
 
-        // FILE UPLOAD LOGIC
         document.getElementById('file-upload').addEventListener('change', (e) => {
             const file = e.target.files[0];
-            
-            if (!file || !file.name.toLowerCase().endsWith('.pdf')) { 
-                showToast("Please select a valid PDF file.", "error"); 
-                e.target.value = ''; return; 
-            }
+            if (!file || !file.name.toLowerCase().endsWith('.pdf')) { showToast("Please select a valid PDF file.", "error"); e.target.value = ''; return; }
             
             customPrompt(file.name.replace(/\.pdf$/i, ''), async (bookName) => {
                 if (!bookName || !bookName.trim()) { e.target.value = ''; return; }
                 const bookId = 'book_' + Date.now(); 
-                
                 showToast("Reading PDF file... Please wait.", "info");
                 
                 try {
                     const buffer = await file.arrayBuffer();
                     showToast("Saving to local memory...", "info");
-                    
                     await saveBook({ id: bookId, name: bookName.trim(), pdfData: buffer, answerStartPage: 1 });
                     showToast("Book saved securely!", "info");
                     
-                    await refreshDropdown(); 
-                    document.getElementById('book-selector').value = bookId; 
-                    await loadBookToView(bookId);
-                } catch (err) { 
-                    console.error("Save error:", err); 
-                    alert("Storage Error: Your browser blocked saving the file. It may be too large for local storage limits.");
-                }
+                    await refreshDropdown(); document.getElementById('book-selector').value = bookId; await loadBookToView(bookId);
+                } catch (err) { alert("Storage Error: Your browser blocked saving the file."); }
                 e.target.value = ''; 
             });
         });
@@ -799,12 +757,8 @@
             if (masterIndex.length > 0) return; 
             for (const file of myIndexFiles) {
                 await new Promise(resolve => {
-                    const script = document.createElement('script');
-                    script.src = `./indices/${file}?v=${Date.now()}`;
-                    script.onload = () => {
-                        if (window.tempIndex) { masterIndex.push(window.tempIndex); window.tempIndex = null; }
-                        script.remove(); resolve();
-                    };
+                    const script = document.createElement('script'); script.src = `./indices/${file}?v=${Date.now()}`;
+                    script.onload = () => { if (window.tempIndex) { masterIndex.push(window.tempIndex); window.tempIndex = null; } script.remove(); resolve(); };
                     script.onerror = () => { console.warn(`Could not load ${file}.`); script.remove(); resolve(); };
                     document.head.appendChild(script);
                 });
@@ -812,23 +766,16 @@
         }
 
         async function loadBookToView(id) {
-            currentBookId = id; 
-            const book = await getBookFull(id); 
-            if (!book) return;
-
+            currentBookId = id; const book = await getBookFull(id); if (!book) return;
             toggleEmptyState(false);
-            document.getElementById('loading-left').classList.remove('hidden'); 
-            document.getElementById('loading-right').classList.remove('hidden');
+            document.getElementById('loading-left').classList.remove('hidden'); document.getElementById('loading-right').classList.remove('hidden');
 
             try {
-                const pdfDataCopy = new Uint8Array(book.pdfData);
-                const loadingTask = pdfjsLib.getDocument({ data: pdfDataCopy });
-                pdfDoc = await loadingTask.promise; 
-                totalPages = pdfDoc.numPages;
+                const pdfDataCopy = new Uint8Array(book.pdfData); const loadingTask = pdfjsLib.getDocument({ data: pdfDataCopy });
+                pdfDoc = await loadingTask.promise; totalPages = pdfDoc.numPages;
 
                 await loadAllIndices();
                 currentBookIndex = masterIndex.find(idx => idx.pageNumber === totalPages) || null;
-                
                 if (currentBookIndex) showToast(`Index Linked (${totalPages} pages)`);
                 populateQuickJump();
 
@@ -840,89 +787,56 @@
                 });
 
                 panes.left.pageNumPending = null; panes.right.pageNumPending = null;
-                if(panes.left.renderTask) panes.left.renderTask.cancel(); 
-                if(panes.right.renderTask) panes.right.renderTask.cancel();
+                if(panes.left.renderTask) panes.left.renderTask.cancel(); if(panes.right.renderTask) panes.right.renderTask.cancel();
 
                 let savedLeft = parseInt(localStorage.getItem('study_pg_left_' + currentBookId)) || 1;
                 let savedRight = parseInt(localStorage.getItem('study_pg_right_' + currentBookId)) || (book.answerStartPage > 1 ? book.answerStartPage : 1);
                 
                 await renderPage('left', savedLeft, appSettings.defaultZoom); 
                 await renderPage('right', savedRight, appSettings.defaultZoom);
-                applyLayout();
-            } catch (err) { 
-                console.error("PDF loading error:", err); 
-                showToast("Failed to load PDF.", "error"); 
-            }
+                
+                if (window.innerWidth < 768 || appSettings.forceSingleView) { switchMobileTab('left'); }
+            } catch (err) { showToast("Failed to load PDF.", "error"); }
         }
 
         async function renderPage(paneId, num, zoomMode = 'fit') {
             if (!pdfDoc) return;
             const pane = panes[paneId];
             if (num < 1) num = 1; if (num > totalPages) num = totalPages;
-            
-            if (pane.pageRendering) { 
-                pane.pageNumPending = num; pane.zoomModePending = zoomMode; 
-                if (pane.renderTask) pane.renderTask.cancel(); return; 
-            }
+            if (pane.pageRendering) { pane.pageNumPending = num; pane.zoomModePending = zoomMode; if (pane.renderTask) pane.renderTask.cancel(); return; }
             
             pane.pageRendering = true; document.getElementById(`loading-${paneId}`).classList.remove('hidden');
             
             try {
                 const page = await pdfDoc.getPage(num); const viewport = page.getViewport({ scale: pane.renderScale });
                 pane.canvas.width = 0; pane.canvas.height = 0; pane.canvas.height = viewport.height; pane.canvas.width = viewport.width;
-                
                 const renderContext = { canvasContext: pane.ctx, viewport: viewport };
                 pane.renderTask = page.render(renderContext); await pane.renderTask.promise;
-                
                 setTimeout(() => page.cleanup(), 50); 
-                
-                setTimeout(() => {
-                    if (num < totalPages) pdfDoc.getPage(num + 1).catch(()=>{});
-                    if (num > 1) pdfDoc.getPage(num - 1).catch(()=>{});
-                }, 200);
+                setTimeout(() => { if (num < totalPages) pdfDoc.getPage(num + 1).catch(()=>{}); if (num > 1) pdfDoc.getPage(num - 1).catch(()=>{}); }, 200);
 
                 pane.pageNum = num; document.getElementById(`page-${paneId}`).value = num; document.getElementById(`scrubber-${paneId}`).value = num;
                 localStorage.setItem(`study_pg_${paneId}_${currentBookId}`, num); 
                 
                 if (zoomMode === 'center' && pane.searchTarget) {
-                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth;
-                    let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
+                    let viewWidth = pane.viewport.clientWidth || document.getElementById('main-container').clientWidth; let viewHeight = pane.viewport.clientHeight || document.getElementById('main-container').clientHeight;
                     pane.scale = ((viewWidth - 40) / pane.canvas.width) * 1.1; 
                     const [px, py] = viewport.convertToViewportPoint(pane.searchTarget.x, pane.searchTarget.y);
-                    pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale);
-                    applyTransform(paneId); pane.searchTarget = null;
-                } else if (zoomMode === 'width') {
-                    zoomToWidth(paneId); 
-                } else if (zoomMode === 'fit') {
-                    resetZoom(paneId);
-                } else if (zoomMode === 'keep') {
-                    applyTransform(paneId); 
-                }
+                    pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (viewHeight / 4) - (py * pane.scale); applyTransform(paneId); pane.searchTarget = null;
+                } else if (zoomMode === 'width') { zoomToWidth(paneId); } else if (zoomMode === 'fit') { resetZoom(paneId); } else if (zoomMode === 'keep') { applyTransform(paneId); }
             } catch (err) { if (err.name !== 'RenderingCancelledException') console.error(err); } 
             finally {
                 pane.pageRendering = false; pane.renderTask = null; document.getElementById(`loading-${paneId}`).classList.add('hidden');
-                if (pane.pageNumPending !== null) {
-                    const nextNum = pane.pageNumPending, nextZoom = pane.zoomModePending || appSettings.defaultZoom;
-                    pane.pageNumPending = null; pane.zoomModePending = null; renderPage(paneId, nextNum, nextZoom);
-                }
+                if (pane.pageNumPending !== null) { const nextNum = pane.pageNumPending, nextZoom = pane.zoomModePending || appSettings.defaultZoom; pane.pageNumPending = null; pane.zoomModePending = null; renderPage(paneId, nextNum, nextZoom); }
             }
         }
 
-        function changePage(paneId, offset) {
-            let next = panes[paneId].pageNum + offset;
-            if (next >= 1 && next <= totalPages) renderPage(paneId, next, 'keep');
-        }
+        function changePage(paneId, offset) { let next = panes[paneId].pageNum + offset; if (next >= 1 && next <= totalPages) renderPage(paneId, next, 'keep'); }
 
         ['left', 'right'].forEach(paneId => {
-            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => {
-                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, 'keep');
-            });
-            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => {
-                const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val;
-            });
-            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => {
-                const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, 'keep');
-            });
+            document.getElementById(`page-${paneId}`).addEventListener('change', (e) => { const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, 'keep'); });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('input', (e) => { const val = parseInt(e.target.value); document.getElementById(`page-${paneId}`).value = val; });
+            document.getElementById(`scrubber-${paneId}`).addEventListener('change', (e) => { const val = parseInt(e.target.value); if (!isNaN(val)) renderPage(paneId, val, 'keep'); });
         });
 
         // --- 5. PAN & ZOOM CONTROLS ---
@@ -943,30 +857,22 @@
         function setupPanZoom(paneId) {
             const pane = panes[paneId];
             pane.viewport.addEventListener('wheel', (e) => {
-                if (!pdfDoc) return; e.preventDefault();
-                const rect = pane.viewport.getBoundingClientRect();
+                if (!pdfDoc) return; e.preventDefault(); const rect = pane.viewport.getBoundingClientRect();
                 const targetX = ((e.clientX - rect.left) - pane.x) / pane.scale, targetY = ((e.clientY - rect.top) - pane.y) / pane.scale;
-                let newScale = pane.scale * (1 + (-e.deltaY * 0.002));
-                if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
-                pane.scale = newScale; pane.x = (e.clientX - rect.left) - (targetX * pane.scale); pane.y = (e.clientY - rect.top) - (targetY * pane.scale);
-                applyTransform(paneId);
+                let newScale = pane.scale * (1 + (-e.deltaY * 0.002)); if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
+                pane.scale = newScale; pane.x = (e.clientX - rect.left) - (targetX * pane.scale); pane.y = (e.clientY - rect.top) - (targetY * pane.scale); applyTransform(paneId);
             }, { passive: false });
 
-            pane.viewport.addEventListener('mousedown', (e) => {
-                if (!pdfDoc || e.button !== 0) return; pane.isDragging = true; pane.wrapper.classList.add('is-dragging'); pane.startX = e.clientX - pane.x; pane.startY = e.clientY - pane.y;
-            });
+            pane.viewport.addEventListener('mousedown', (e) => { if (!pdfDoc || e.button !== 0) return; pane.isDragging = true; pane.wrapper.classList.add('is-dragging'); pane.startX = e.clientX - pane.x; pane.startY = e.clientY - pane.y; });
             window.addEventListener('mousemove', (e) => { if (!pane.isDragging) return; pane.x = e.clientX - pane.startX; pane.y = e.clientY - pane.startY; applyTransform(paneId); });
-            const stopDrag = () => { pane.isDragging = false; pane.wrapper.classList.remove('is-dragging'); };
-            window.addEventListener('mouseup', stopDrag); pane.viewport.addEventListener('mouseleave', stopDrag);
+            const stopDrag = () => { pane.isDragging = false; pane.wrapper.classList.remove('is-dragging'); }; window.addEventListener('mouseup', stopDrag); pane.viewport.addEventListener('mouseleave', stopDrag);
 
             let touchStartDistance = 0, initialScale = 1, touchStartX = 0, touchTime = 0, lastTap = 0;
             pane.viewport.addEventListener('touchstart', (e) => {
-                if (!pdfDoc) return;
-                const now = Date.now();
+                if (!pdfDoc) return; const now = Date.now();
                 if (e.touches.length === 1) {
                     if (now - lastTap < 300) {
-                        e.preventDefault();
-                        const viewWidth = pane.viewport.clientWidth; const fitScale = (viewWidth - 40) / pane.canvas.width;
+                        e.preventDefault(); const viewWidth = pane.viewport.clientWidth; const fitScale = (viewWidth - 40) / pane.canvas.width;
                         if (pane.scale > fitScale * 1.2) resetZoom(paneId);
                         else {
                             pane.scale = fitScale * 1.8; const rect = pane.viewport.getBoundingClientRect();
@@ -974,18 +880,14 @@
                             pane.x = (viewWidth / 2) - (px * pane.scale); pane.y = (pane.viewport.clientHeight / 2) - (py * pane.scale); applyTransform(paneId);
                         }
                     }
-                    lastTap = now; pane.isDragging = true; pane.wrapper.classList.add('is-dragging');
-                    touchStartX = e.touches[0].clientX; pane.startX = touchStartX - pane.x; pane.startY = e.touches[0].clientY - pane.y; touchTime = now;
-                } else if (e.touches.length === 2) {
-                    pane.isDragging = false; touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialScale = pane.scale;
-                }
+                    lastTap = now; pane.isDragging = true; pane.wrapper.classList.add('is-dragging'); touchStartX = e.touches[0].clientX; pane.startX = touchStartX - pane.x; pane.startY = e.touches[0].clientY - pane.y; touchTime = now;
+                } else if (e.touches.length === 2) { pane.isDragging = false; touchStartDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialScale = pane.scale; }
             }, { passive: false });
 
             pane.viewport.addEventListener('touchmove', (e) => {
                 if (!pdfDoc) return; e.preventDefault(); 
-                if (e.touches.length === 1 && pane.isDragging) {
-                    pane.x = e.touches[0].clientX - pane.startX; pane.y = e.touches[0].clientY - pane.startY; applyTransform(paneId);
-                } else if (e.touches.length === 2) {
+                if (e.touches.length === 1 && pane.isDragging) { pane.x = e.touches[0].clientX - pane.startX; pane.y = e.touches[0].clientY - pane.startY; applyTransform(paneId); } 
+                else if (e.touches.length === 2) {
                     const currentDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                     let newScale = initialScale * (currentDistance / touchStartDistance); if (newScale < 0.1) newScale = 0.1; if (newScale > 5.0) newScale = 5.0;
                     const rect = pane.viewport.getBoundingClientRect(), centerX = ((e.touches[0].clientX + e.touches[1].clientX) / 2) - rect.left, centerY = ((e.touches[0].clientY + e.touches[1].clientY) / 2) - rect.top;
@@ -993,14 +895,24 @@
                     pane.scale = newScale; pane.x = centerX - (targetX * pane.scale); pane.y = centerY - (targetY * pane.scale); applyTransform(paneId);
                 }
             }, { passive: false });
-
-            pane.viewport.addEventListener('touchend', (e) => {
-                if (!pdfDoc) return; pane.isDragging = false; pane.wrapper.classList.remove('is-dragging');
-            });
+            pane.viewport.addEventListener('touchend', (e) => { if (!pdfDoc) return; pane.isDragging = false; pane.wrapper.classList.remove('is-dragging'); });
         }
         setupPanZoom('left'); setupPanZoom('right');
 
         // --- 6. SEARCH ENGINES ---
+        function populateQuickJump() {
+            const dropdown = document.getElementById('quick-jump-dropdown'); dropdown.innerHTML = '<option value="">Quick Jump...</option>';
+            if (currentBookIndex) { dropdown.classList.remove('hidden'); for (const key of Object.keys(currentBookIndex)) { if (key === 'pageNumber') continue; const opt = document.createElement('option'); opt.value = key; opt.textContent = `Exercise ${key.toUpperCase()}`; dropdown.appendChild(opt); } } 
+            else { dropdown.classList.add('hidden'); }
+        }
+
+        window.jumpToQuickIndex = function(key) {
+            if (!key || !pdfDoc || !currentBookIndex) return; const ex = currentBookIndex[key];
+            const q = ex.pages ? ex.pages[0] : ex.q; const a = ex.pages ? ex.pages[1] : ex.a;
+            renderPage('left', q, 'keep'); if (a) renderPage('right', a, 'keep');
+            document.getElementById('quick-jump-dropdown').selectedIndex = 0; 
+        };
+
         async function executeSearchAll(paneId, overrideQuery = null) {
             if (!pdfDoc || !currentBookId) return;
             const pane = panes[paneId]; 
@@ -1008,142 +920,79 @@
             const btnClear = document.getElementById(`btn-clear-${paneId}`);
             const statusEl = document.getElementById(`status-${paneId}`);
             
-            const rawQuery = overrideQuery.trim().toLowerCase();
+            const rawQuery = overrideQuery ? overrideQuery.trim().toLowerCase() : '';
             if (!rawQuery) { clearSearch(paneId); return; } 
             
             const searchMode = appSettings.searchMode;
-            
             const pdfSearchQuery = rawQuery.replace(/\s+/g, '');
             let jsonKey = pdfSearchQuery;
             if (jsonKey.startsWith('exercise')) jsonKey = jsonKey.replace('exercise', '');
             else if (jsonKey.startsWith('ex')) jsonKey = jsonKey.replace('ex', '');
 
-            /* --- 1. JSON INDEX SEARCH --- */
             if (searchMode === 'smart' || searchMode === 'index') {
-                if (!currentBookIndex && searchMode === 'index') {
-                    statusEl.textContent = "No index linked."; 
-                    return;
-                }
+                if (!currentBookIndex && searchMode === 'index') { statusEl.textContent = "No index linked."; return; }
                 if (currentBookIndex && currentBookIndex[jsonKey]) {
                     const ex = currentBookIndex[jsonKey];
                     const targetPage = (paneId === 'left') ? (ex.q || ex.pages[0]) : (ex.a || ex.pages[1] || ex.q);
-                    
-                    renderPage(paneId, targetPage, 'keep');
-                    statusEl.textContent = "⚡ Match";
-                    
-                    statusEl.classList.add('opacity-50');
-                    setTimeout(() => statusEl.classList.remove('opacity-50'), 150);
-                    return;
-                } else if (searchMode === 'index') {
-                    statusEl.textContent = "Not in index."; 
-                    return;
-                }
+                    renderPage(paneId, targetPage, 'keep'); statusEl.textContent = "⚡ Match";
+                    statusEl.classList.add('opacity-50'); setTimeout(() => statusEl.classList.remove('opacity-50'), 150); return;
+                } else if (searchMode === 'index') { statusEl.textContent = "Not in index."; return; }
             }
             
-            /* --- 2. DEEP PDF TEXT SCAN --- */
             if (searchMode === 'smart' || searchMode === 'text') {
                 statusEl.textContent = "Scanning...";
-                
                 let startPage = 1;
-                if (document.getElementById(`answers-only-${paneId}`)?.checked) {
-                    const books = await getBooksMetadata(); 
-                    const book = books.find(b => b.id === currentBookId);
-                    if (book && book.answerStartPage > 1) startPage = Math.min(book.answerStartPage, totalPages);
-                }
+                if (document.getElementById(`answers-only-${paneId}`)?.checked) { const books = await getBooksMetadata(); const book = books.find(b => b.id === currentBookId); if (book && book.answerStartPage > 1) startPage = Math.min(book.answerStartPage, totalPages); }
 
                 const results = [];
                 try {
                     for (let i = startPage; i <= totalPages; i++) {
-                        const page = await pdfDoc.getPage(i); 
-                        const textContent = await page.getTextContent();
-                        
-                        let rawText = '';
-                        for (let j = 0; j < textContent.items.length; j++) {
-                            rawText += textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
-                        }
-                        
+                        const page = await pdfDoc.getPage(i); const textContent = await page.getTextContent();
+                        let rawText = ''; for (let j = 0; j < textContent.items.length; j++) { rawText += textContent.items[j].str.toLowerCase().replace(/\s+/g, ''); }
                         if (rawText.includes(pdfSearchQuery)) {
-                            let itemMap = [];
-                            for (let j = 0; j < textContent.items.length; j++) {
-                                const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, '');
-                                for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]);
-                            }
-                            
+                            let itemMap = []; for (let j = 0; j < textContent.items.length; j++) { const itemStr = textContent.items[j].str.toLowerCase().replace(/\s+/g, ''); for(let c = 0; c < itemStr.length; c++) itemMap.push(textContent.items[j]); }
                             let matchIndex = rawText.indexOf(pdfSearchQuery), pageMatchCount = 0;
                             while (matchIndex !== -1) {
-                                pageMatchCount++; 
-                                const targetItem = itemMap[matchIndex];
-                                let coords = null; 
+                                pageMatchCount++; const targetItem = itemMap[matchIndex]; let coords = null; 
                                 if (targetItem && targetItem.transform) coords = { x: targetItem.transform[4], y: targetItem.transform[5] };
-                                
-                                results.push({ page: i, coords: coords, instance: pageMatchCount }); 
-                                matchIndex = rawText.indexOf(pdfSearchQuery, matchIndex + pdfSearchQuery.length);
+                                results.push({ page: i, coords: coords, instance: pageMatchCount }); matchIndex = rawText.indexOf(pdfSearchQuery, matchIndex + pdfSearchQuery.length);
                             }
                         }
-                        
-                        setTimeout(() => page.cleanup(), 5);
-
-                        if (i % 5 === 0) { 
-                            statusEl.textContent = `Scanning Pg ${i}...`; 
-                            await new Promise(r => setTimeout(r, 1)); 
-                        } 
+                        setTimeout(() => page.cleanup(), 5); if (i % 5 === 0) { statusEl.textContent = `Scanning Pg ${i}...`; await new Promise(r => setTimeout(r, 1)); } 
                     }
                     
                     if (results.length > 0) {
-                        statusEl.textContent = `🔍 Found (${results.length})`; 
-                        selectEl.innerHTML = `<option value="">Select a match...</option>`;
-                        results.forEach((res, index) => {
-                            const opt = document.createElement('option'); 
-                            opt.value = JSON.stringify(res); 
-                            opt.textContent = `Match ${index + 1} (Page ${res.page})`; 
-                            selectEl.appendChild(opt);
-                        });
-                        
-                        selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
-                        pane.previousPage = pane.pageNum; document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
+                        statusEl.textContent = `🔍 Found (${results.length})`; selectEl.innerHTML = `<option value="">Select a match...</option>`;
+                        results.forEach((res, index) => { const opt = document.createElement('option'); opt.value = JSON.stringify(res); opt.textContent = `Match ${index + 1} (Page ${res.page})`; selectEl.appendChild(opt); });
+                        selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden'); pane.previousPage = pane.pageNum; document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
                         jumpToSearchResult(paneId, JSON.stringify(results[0])); selectEl.selectedIndex = 1;
-                    } else { 
-                        statusEl.textContent = "No matches.";
-                    }
+                    } else { statusEl.textContent = "No matches."; }
                 } catch (err) { statusEl.textContent = "Error."; }
             }
         }
 
         function clearSearch(paneId) {
-            document.getElementById(`search-results-${paneId}`).classList.add('hidden');
-            document.getElementById(`btn-clear-${paneId}`).classList.add('hidden');
-            document.getElementById(`btn-snap-${paneId}`).classList.add('hidden');
-            document.getElementById(`status-${paneId}`).textContent = '';
+            const resultsEl = document.getElementById(`search-results-${paneId}`); if(resultsEl) resultsEl.classList.add('hidden');
+            const btnClear = document.getElementById(`btn-clear-${paneId}`); if(btnClear) btnClear.classList.add('hidden');
+            const btnSnap = document.getElementById(`btn-snap-${paneId}`); if(btnSnap) btnSnap.classList.add('hidden');
+            const statusEl = document.getElementById(`status-${paneId}`); if(statusEl) statusEl.textContent = '';
             panes[paneId].searchTarget = null; panes[paneId].previousPage = null;
         }
 
         window.jumpToSearchResult = (paneId, val = null) => {
             const selectEl = document.getElementById(`search-results-${paneId}`); const value = val || selectEl.value;
-            if (!value) return; const res = JSON.parse(value);
-            panes[paneId].searchTarget = res.coords; renderPage(paneId, res.page, 'center');
+            if (!value) return; const res = JSON.parse(value); panes[paneId].searchTarget = res.coords; renderPage(paneId, res.page, 'center');
         };
 
-        window.snapBack = (paneId) => {
-            if (panes[paneId].previousPage) { renderPage(paneId, panes[paneId].previousPage, appSettings.defaultZoom); document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); }
-        };
+        window.snapBack = (paneId) => { if (panes[paneId].previousPage) { renderPage(paneId, panes[paneId].previousPage, appSettings.defaultZoom); document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); } };
 
         // --- 7. SETTINGS LIBRARY MANAGER ---
         async function populateSettings() {
             const settingsList = document.getElementById('settings-book-list'); settingsList.innerHTML = ''; const books = await getBooksMetadata(); 
             if (books.length === 0) { settingsList.innerHTML = '<p class="text-slate-500 italic text-sm">No books in library.</p>'; return; }
             books.forEach(book => {
-                const row = document.createElement('div');
-                row.className = "flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm";
-                row.innerHTML = `
-                    <div class="flex-1 mr-4 overflow-hidden">
-                        <h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate" title="${book.name}">${book.name}</h3>
-                        <div class="flex items-center gap-2 mt-2"><label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Answers Start Pg:</label><input type="number" min="1" id="input-ans-${book.id}" value="${book.answerStartPage || 1}" class="w-20 px-2 py-1 text-xs border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"></div>
-                    </div>
-                    <div class="flex flex-col gap-2 flex-shrink-0">
-                        <button onclick="saveBookSettings('${book.id}')" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded text-xs font-semibold">Save</button>
-                        <button onclick="deleteBookAction('${book.id}')" class="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded text-xs font-semibold">Delete</button>
-                    </div>
-                `;
+                const row = document.createElement('div'); row.className = "flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm";
+                row.innerHTML = `<div class="flex-1 mr-4 overflow-hidden"><h3 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate" title="${book.name}">${book.name}</h3><div class="flex items-center gap-2 mt-2"><label class="text-xs text-slate-500 dark:text-slate-400 font-medium">Answers Start Pg:</label><input type="number" min="1" id="input-ans-${book.id}" value="${book.answerStartPage || 1}" class="w-20 px-2 py-1 text-xs border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"></div></div><div class="flex flex-col gap-2 flex-shrink-0"><button onclick="saveBookSettings('${book.id}')" class="px-3 py-1 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded text-xs font-semibold">Save</button><button onclick="deleteBookAction('${book.id}')" class="px-3 py-1 bg-red-100 hover:bg-red-200 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded text-xs font-semibold">Delete</button></div>`;
                 settingsList.appendChild(row);
             });
         }
@@ -1151,11 +1000,7 @@
         window.saveBookSettings = async (id) => {
             const input = document.getElementById(`input-ans-${id}`); const val = parseInt(input.value); if (isNaN(val) || val < 1) return;
             const book = await getBookFull(id); 
-            if (book) {
-                book.answerStartPage = val; await saveBook(book);
-                const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button'); const origText = btn.textContent; btn.textContent = "Saved!"; btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300");
-                setTimeout(() => { btn.textContent = origText; btn.classList.remove("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300"); }, 1500);
-            }
+            if (book) { book.answerStartPage = val; await saveBook(book); const btn = input.parentElement.parentElement.nextElementSibling.querySelector('button'); const origText = btn.textContent; btn.textContent = "Saved!"; btn.classList.add("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300"); setTimeout(() => { btn.textContent = origText; btn.classList.remove("bg-green-100", "text-green-700", "dark:bg-green-900/40", "dark:text-green-300"); }, 1500); }
         };
 
         window.deleteBookAction = (id) => {
@@ -1169,7 +1014,6 @@
                 }
             });
         };
-
     </script>
 </body>
 </html>
