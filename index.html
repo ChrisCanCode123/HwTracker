@@ -477,7 +477,7 @@
             navigator.storage.persist().then((persistent) => { if (persistent) console.log("Storage locked."); });
         }
 
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+        
 
         // ⬇️ ADD ALL YOUR SEPARATE JAVASCRIPT INDEX FILE NAMES HERE ⬇️
         const myIndexFiles = [
@@ -526,6 +526,9 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+            
             if (!window.isAppAuthorized) return; 
             if (!appSettings.themeColor) appSettings.themeColor = 'blue';
             applyThemeColor(); applyTheme(); applyLayout();
