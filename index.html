@@ -6,6 +6,15 @@
     <title>Chris.PDF v2</title>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Instant CSS Splash Screen -->
+    <style>
+        #app-splash { position: fixed; inset: 0; background-color: #0f172a; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.4s ease; }
+        .splash-spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-left-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        .splash-text { color: #f8fafc; font-family: sans-serif; font-weight: 600; font-size: 18px; letter-spacing: 0.5px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
@@ -35,7 +44,6 @@
         .pdf-canvas { display: block; box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); background-color: white; transition: filter 0.3s ease; }
         .dark .pdf-canvas { filter: invert(0.92) hue-rotate(180deg); }
         .loader { border: 3px solid rgba(156, 163, 175, 0.2); border-top: 3px solid #3b82f6; border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .single-view-mode #resizer { display: none !important; }
         .single-view-mode .pane { width: 100% !important; }
         .single-view-mode.show-left #pane-right { display: none !important; }
@@ -48,14 +56,27 @@
         .dark input[type=range]::-webkit-slider-runnable-track { background: #475569; }
         .immersive-active header, .immersive-active .pane-header, .immersive-active #mobile-tab-bar { display: none !important; }
         .immersive-active #btn-exit-immersive { display: flex !important; }
+        
+        /* Custom Radio Buttons for Hub */
+        input[type="radio"]:checked + span { background-color: white; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .dark input[type="radio"]:checked + span { background-color: #1e293b; color: #60a5fa; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body class="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
 
+    <div id="app-splash">
+        <div class="splash-spinner"></div>
+        <div class="splash-text">Chris.PDF</div>
+    </div>
+
     <script>
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('app-splash');
+            if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.remove(), 400); }
+        });
+
         // --- SECURITY LOCKDOWN ---
         window.isAppAuthorized = false; 
-        
         const INSTALL_PIN = "5566";  
         const APP_PASSCODE = "7788"; 
         const DEV_OVERRIDE = "admin123"; 
@@ -67,63 +88,29 @@
 
         window.checkPin = function() {
             const input = document.getElementById('pin-input').value;
-            if (input === APP_PASSCODE) {
-                localStorage.setItem('chris_pdf_authorized', 'true');
-                location.reload();
-            } else {
-                alert('Incorrect access code.');
-            }
+            if (input === APP_PASSCODE) { localStorage.setItem('chris_pdf_authorized', 'true'); location.reload(); } 
+            else { alert('Incorrect access code.'); }
         };
 
         window.devUnlock = function(password) {
-            if (password === DEV_OVERRIDE) {
-                sessionStorage.setItem('chris_dev_mode', 'true');
-                localStorage.setItem('chris_pdf_authorized', 'true');
-                location.reload();
-                return "Unlocking app...";
-            }
+            if (password === DEV_OVERRIDE) { sessionStorage.setItem('chris_dev_mode', 'true'); localStorage.setItem('chris_pdf_authorized', 'true'); location.reload(); return "Unlocking app..."; }
             return "Incorrect password.";
         };
 
-        console.log("%cApp Locked. To bypass, type devUnlock('your_password') in the console.", "color: #ef4444; font-weight: bold; font-size: 14px;");
-
-        if (isDevMode) {
-            window.isAppAuthorized = true;
-        } else if (!isStandalone) {
+        if (isDevMode) { window.isAppAuthorized = true; } 
+        else if (!isStandalone) {
             if (urlPin !== INSTALL_PIN) {
-                document.write(`
-                    <style>body > *:not(.lock-screen) { display: none !important; }</style>
-                    <div class="lock-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f1f5f9;font-family:sans-serif;text-align:center;">
-                        <h2>Access Denied.</h2><p style="color:#94a3b8;margin-top:8px;">Invalid installation link.</p>
-                    </div>
-                `);
+                document.write(`<style>body > *:not(.lock-screen) { display: none !important; }</style><div class="lock-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f1f5f9;font-family:sans-serif;text-align:center;"><h2>Access Denied.</h2><p style="color:#94a3b8;margin-top:8px;">Invalid installation link.</p></div>`);
                 window.stop();
             } else {
-                document.write(`
-                    <style>body > *:not(.lock-screen) { display: none !important; }</style>
-                    <div class="lock-screen" style="position:fixed;inset:0;background:#f1f5f9;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#0f172a;font-family:sans-serif;padding:20px;text-align:center;">
-                        <h2>Installation Authorized</h2><p style="margin-top:10px; color:#64748b;">Tap the Share icon at the bottom of Safari and select <b>"Add to Home Screen"</b> to install your app.</p>
-                    </div>
-                `);
+                document.write(`<style>body > *:not(.lock-screen) { display: none !important; }</style><div class="lock-screen" style="position:fixed;inset:0;background:#f1f5f9;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#0f172a;font-family:sans-serif;padding:20px;text-align:center;"><h2>Installation Authorized</h2><p style="margin-top:10px; color:#64748b;">Tap the Share icon at the bottom of Safari and select <b>"Add to Home Screen"</b> to install your app.</p></div>`);
                 window.stop();
             }
         } else {
-            if (urlPin) {
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-
-            if (localStorage.getItem('chris_pdf_authorized') === 'true') {
-                window.isAppAuthorized = true;
-            } else {
-                document.write(`
-                    <style>body > *:not(.lock-screen) { display: none !important; }</style>
-                    <div class="lock-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f1f5f9;font-family:sans-serif;">
-                        <h2 style="margin-bottom: 10px;">App Locked</h2>
-                        <p style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Enter your client passcode to unlock your device.</p>
-                        <input type="password" id="pin-input" style="padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; text-align: center; margin-bottom: 16px; font-size: 18px; width: 220px;" placeholder="Enter Passcode">
-                        <button onclick="window.checkPin()" style="padding: 12px 24px; border-radius: 8px; background: #3b82f6; color: white; border: none; font-weight: bold; cursor: pointer; width: 220px; transition: background 0.2s;">Unlock App</button>
-                    </div>
-                `);
+            if (urlPin) { window.history.replaceState({}, document.title, window.location.pathname); }
+            if (localStorage.getItem('chris_pdf_authorized') === 'true') { window.isAppAuthorized = true; } 
+            else {
+                document.write(`<style>body > *:not(.lock-screen) { display: none !important; }</style><div class="lock-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f1f5f9;font-family:sans-serif;"><h2 style="margin-bottom: 10px;">App Locked</h2><p style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Enter your client passcode to unlock your device.</p><input type="password" id="pin-input" style="padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; text-align: center; margin-bottom: 16px; font-size: 18px; width: 220px;" placeholder="Enter Passcode"><button onclick="window.checkPin()" style="padding: 12px 24px; border-radius: 8px; background: #3b82f6; color: white; border: none; font-weight: bold; cursor: pointer; width: 220px; transition: background 0.2s;">Unlock App</button></div>`);
                 window.stop();
             }
         }
@@ -135,67 +122,117 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h4V4m0 16v-4H4m16 4h-4v-4m0-12v4h4"></path></svg>
     </button>
 
-    <!-- Header UI -->
-    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 flex-shrink-0 px-4 py-3 flex flex-col md:flex-row items-center justify-between gap-3 relative">
-        <div class="flex items-center justify-between w-full md:w-auto">
-            <h1 class="text-xl font-bold text-blue-600 dark:text-blue-400 flex-shrink-0 flex items-center gap-2">
+    <!-- Ultra-Clean Header -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm z-30 px-3 py-2 flex flex-wrap items-center justify-between gap-2 h-[56px] flex-shrink-0">
+        <!-- Left: Menu Toggle & Title -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <button id="btn-mobile-menu" class="p-1.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+            <h1 class="hidden md:flex text-lg font-bold text-blue-600 dark:text-blue-400 items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                 Chris.PDF
             </h1>
-            <div class="flex items-center gap-2 md:hidden">
-                <button onclick="toggleLayoutQuick()" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors" title="Toggle Split View">
-                    <svg class="icon-split h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h2m8-16h2a2 2 0 012 2v12a2 2 0 01-2 2h-2M9 5v16M15 5v16" /></svg>
-                    <svg class="icon-single h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                </button>
-                <button id="btn-mobile-menu" class="p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                </button>
-            </div>
         </div>
 
-        <div id="header-controls" class="hidden md:flex flex-col md:flex-row items-center gap-3 w-full justify-between mt-3 md:mt-0 pb-2 md:pb-0">
-            <select id="book-selector" class="w-full md:w-auto flex-shrink-0 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2 min-w-[150px]">
+        <!-- Center: Prominent Dropdowns -->
+        <div class="flex-1 flex items-center justify-start md:justify-center gap-2 w-full">
+            <select id="book-selector" class="w-full max-w-[180px] md:max-w-[280px] bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white text-sm rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 text-ellipsis whitespace-nowrap overflow-hidden font-medium">
                 <option value="">Select a book...</option>
             </select>
+            <select id="quick-jump-dropdown" onchange="jumpToQuickIndex(this.value)" class="hidden w-full max-w-[140px] md:max-w-[200px] bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-semibold text-sm rounded-lg p-2 focus:ring-blue-500 focus:border-blue-500 text-ellipsis whitespace-nowrap overflow-hidden">
+                <option value="">Quick Jump...</option>
+            </select>
+        </div>
 
-            <div class="flex-1 w-full max-w-xl mx-auto flex items-center gap-2">
-                <div class="relative w-full">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                    </div>
-                    <input type="text" id="search-global" placeholder="Search exercises (e.g. 1a)..." class="block w-full pl-9 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm">
-                </div>
-                <button onclick="executeGlobalSearch()" class="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm disabled:opacity-50">Search</button>
-            </div>
+        <!-- Right: Action Icons -->
+        <div class="flex items-center gap-1 flex-shrink-0">
+            <!-- Universal Search Button -->
+            <button onclick="openSearchHub()" class="flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 transition-colors shadow-sm mr-1 md:mr-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            </button>
 
-            <div class="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto">
-                <select id="quick-jump-dropdown" onchange="jumpToQuickIndex(this.value)" class="hidden w-full md:w-auto bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white font-semibold text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2">
-                    <option value="">Quick Jump...</option>
-                </select>
-
-                <input type="file" id="file-upload" accept="application/pdf" class="hidden">
-                
-                <!-- These buttons will now show inside the mobile menu properly -->
-                <button onclick="document.getElementById('file-upload').click()" class="flex flex-1 md:flex-none justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2 rounded-lg text-sm font-semibold transition-colors items-center gap-1 border border-slate-300 dark:border-slate-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> 
-                    <span>Add Book</span>
-                </button>
-                
-                <button onclick="toggleLayoutQuick()" class="hidden md:flex p-2 rounded-lg md:rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 md:bg-transparent md:border-transparent" title="Toggle Split/Single View">
-                    <svg class="icon-split h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h2m8-16h2a2 2 0 012 2v12a2 2 0 01-2 2h-2M9 5v16M15 5v16" /></svg>
-                    <svg class="icon-single h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                </button>
-
-                <button onclick="toggleImmersive()" class="flex flex-1 md:flex-none justify-center p-2 rounded-lg md:rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 md:bg-transparent md:border-transparent" title="Fullscreen">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
-                </button>
-
-                <button onclick="openSettings()" class="flex flex-1 md:flex-none justify-center p-2 rounded-lg md:rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 transition-colors bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 md:bg-transparent md:border-transparent" title="Settings">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                </button>
-            </div>
+            <!-- Desktop Specific Icons -->
+            <input type="file" id="file-upload" accept="application/pdf" class="hidden">
+            <button onclick="document.getElementById('file-upload').click()" class="hidden md:flex justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors items-center gap-1 border border-slate-300 dark:border-slate-600 mr-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> 
+                <span>Add Book</span>
+            </button>
+            <button onclick="toggleLayoutQuick()" class="hidden md:flex p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors" title="Toggle Split View">
+                <svg class="icon-split h-5 w-5 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h2m8-16h2a2 2 0 012 2v12a2 2 0 01-2 2h-2M9 5v16M15 5v16" /></svg>
+                <svg class="icon-single h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+            </button>
+            <button onclick="toggleImmersive()" class="hidden md:flex p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors" title="Fullscreen">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+            </button>
+            <button onclick="openSettings()" class="hidden md:flex p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors" title="Settings">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            </button>
         </div>
     </header>
+
+    <!-- SMART SEARCH HUB (Bottom Sheet / Overlay) -->
+    <div id="search-hub-overlay" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden transition-opacity opacity-0 flex items-end md:items-center justify-center">
+        <div id="search-hub-modal" class="bg-white dark:bg-slate-800 w-full md:w-[480px] rounded-t-2xl md:rounded-2xl p-5 shadow-2xl transform translate-y-full md:translate-y-10 md:scale-95 transition-all duration-300 border border-slate-200 dark:border-slate-700">
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg> 
+                    Search PDF
+                </h3>
+                <button onclick="closeSearchHub()" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+            
+            <input type="text" id="hub-input" placeholder="Search exercises (e.g., 1a)..." class="w-full px-4 py-4 text-lg bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 mb-5 shadow-inner">
+            
+            <!-- 3-Way Context Toggle -->
+            <div class="flex bg-slate-200/60 dark:bg-slate-900/60 rounded-xl p-1 mb-6 border border-slate-300 dark:border-slate-700">
+                <label class="flex-1 text-center">
+                    <input type="radio" name="searchScope" value="left" class="hidden">
+                    <span class="block py-2.5 text-sm font-bold text-slate-500 rounded-lg cursor-pointer transition-all">Questions</span>
+                </label>
+                <label class="flex-1 text-center">
+                    <input type="radio" name="searchScope" value="both" class="hidden">
+                    <span class="block py-2.5 text-sm font-bold text-slate-500 rounded-lg cursor-pointer transition-all">Both Views</span>
+                </label>
+                <label class="flex-1 text-center">
+                    <input type="radio" name="searchScope" value="right" class="hidden">
+                    <span class="block py-2.5 text-sm font-bold text-slate-500 rounded-lg cursor-pointer transition-all">Answers</span>
+                </label>
+            </div>
+            
+            <button onclick="executeHubSearch()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition-all text-lg flex items-center justify-center gap-2">
+                Find Matches
+            </button>
+        </div>
+    </div>
+
+    <!-- Mobile Drawer Menu (Hidden by default) -->
+    <div id="mobile-drawer-overlay" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden transition-opacity opacity-0"></div>
+    <div id="mobile-drawer" class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-800 shadow-2xl z-50 transform -translate-x-full transition-transform duration-200 ease-in-out flex flex-col">
+        <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900">
+            <h2 class="text-lg font-bold text-blue-600 dark:text-blue-400">Menu</h2>
+            <button id="btn-close-drawer" class="p-1 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+        <div class="p-4 flex flex-col gap-3">
+            <button onclick="document.getElementById('file-upload').click(); closeMobileDrawer();" class="flex items-center gap-3 w-full p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-lg font-semibold hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg> Add Book
+            </button>
+            <div class="h-px w-full bg-slate-200 dark:bg-slate-700 my-2"></div>
+            <button onclick="toggleLayoutQuick(); closeMobileDrawer();" class="flex items-center gap-3 w-full p-3 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" /></svg> Toggle Split View
+            </button>
+            <button onclick="toggleImmersive(); closeMobileDrawer();" class="flex items-center gap-3 w-full p-3 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg> Fullscreen
+            </button>
+            <button onclick="openSettings(); closeMobileDrawer();" class="flex items-center gap-3 w-full p-3 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors font-medium">
+                <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg> Settings
+            </button>
+        </div>
+    </div>
 
     <!-- Modals -->
     <div id="modal-prompt" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 px-4">
@@ -269,11 +306,9 @@
     <main class="flex-1 flex w-full h-full overflow-hidden relative show-left" id="main-container">
         
         <div id="empty-state-overlay" class="absolute inset-0 z-30 bg-white dark:bg-slate-900 flex flex-col items-center justify-center transition-colors px-4 text-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 text-slate-300 dark:text-slate-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 md:h-20 md:w-20 text-slate-300 dark:text-slate-600 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
             <h2 class="text-xl md:text-2xl font-bold text-slate-700 dark:text-slate-200 mb-2">Welcome to Chris.PDF</h2>
-            <p id="empty-state-msg" class="text-sm md:text-base text-slate-500 dark:text-slate-400 mb-8 max-w-md">Your library is currently empty. Click "Add Book" above to securely upload your first PDF textbook.</p>
+            <p id="empty-state-msg" class="text-sm md:text-base text-slate-500 dark:text-slate-400 mb-8 max-w-md">Your library is currently empty. Open the menu to upload your first PDF textbook.</p>
             <button onclick="document.getElementById('file-upload').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg> 
                 <span>Upload PDF Book</span>
@@ -283,22 +318,21 @@
         <!-- Left Pane -->
         <section id="pane-left" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900 border-r border-slate-300 dark:border-slate-700" style="width: 50%;">
             <div class="pane-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
-                <div class="flex items-center gap-2 w-full">
-                    <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
-                    <div class="flex-1 relative flex items-center gap-1">
-                        <input type="text" id="search-left" placeholder="Search..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
-                        <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
-                        <button id="btn-search-left" onclick="executeSearchAll('left')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
-                        <button id="btn-clear-left" onclick="clearSearch('left')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded text-sm font-bold flex-shrink-0 transition-colors">
+                <div class="flex items-center gap-2 w-full justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded pointer-events-none">Questions</span>
+                    
+                    <!-- Search Results Nav (Only visible when search active) -->
+                    <div class="flex-1 relative flex items-center gap-1 justify-end">
+                        <select id="search-results-left" onchange="jumpToSearchResult('left')" class="hidden w-full max-w-[200px] px-2 py-1 text-sm border border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
+                        <button id="btn-clear-left" onclick="clearSearch('left')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-bold flex-shrink-0 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
-                        <button id="btn-snap-left" onclick="snapBack('left')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
+                        <button id="btn-snap-left" onclick="snapBack('left')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
                     </div>
                 </div>
                 <div class="flex flex-col gap-1 mt-1">
                     <div class="flex items-center justify-between w-full">
                         <div class="flex items-center text-xs font-medium text-slate-700 dark:text-slate-300">
-                            <!-- Increased thumb padding here (px-3 py-2) -->
                             <button onclick="changePage('left', -1)" class="px-3 py-2 hover:bg-slate-200 dark:hover:bg-slate-600 rounded transition-colors" title="Previous Page">&lsaquo;</button>
                             <span class="mx-1">Pg</span> <input type="number" id="page-left" value="1" min="1" class="w-12 text-center border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 mx-1 py-1 focus:outline-none focus:border-blue-500">
                             <span class="mr-1">/ <span id="total-left">?</span></span>
@@ -323,7 +357,6 @@
                 <div class="absolute inset-y-0 right-0 w-16 flex items-center justify-end pr-2 z-20 opacity-40 hover:opacity-100 transition-opacity">
                     <button onclick="changePage('left', 1)" class="pointer-events-auto p-3 bg-slate-900/60 hover:bg-blue-600 text-white rounded-full shadow-lg backdrop-blur-sm transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg></button>
                 </div>
-
                 <div id="wrapper-left" class="canvas-wrapper"><canvas id="canvas-left" class="pdf-canvas"></canvas></div>
                 <div id="loading-left" class="absolute inset-0 flex items-center justify-center bg-slate-100/80 dark:bg-slate-900/80 hidden z-10 backdrop-blur-sm"><div class="loader"></div></div>
             </div>
@@ -336,16 +369,16 @@
         <!-- Right Pane -->
         <section id="pane-right" class="pane flex flex-col h-full bg-slate-100 dark:bg-slate-900" style="width: 50%;">
             <div class="pane-header bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-2 flex flex-col gap-1 z-10 shadow-sm relative">
-                <div class="flex items-center gap-2 w-full">
-                    <span class="hidden sm:inline text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers</span>
-                    <div class="flex-1 relative flex items-center gap-1">
-                        <input type="text" id="search-right" placeholder="Search..." class="w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
-                        <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full px-2 py-1 text-sm border border-slate-300 dark:border-slate-600 rounded bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
-                        <button id="btn-search-right" onclick="executeSearchAll('right')" class="px-3 py-1 bg-slate-800 dark:bg-slate-700 text-white rounded text-sm font-medium transition-colors">Find</button>
-                        <button id="btn-clear-right" onclick="clearSearch('right')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded text-sm font-bold flex-shrink-0 transition-colors">
+                <div class="flex items-center gap-2 w-full justify-between">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 px-2 py-0.5 rounded pointer-events-none">Answers</span>
+                    
+                    <!-- Search Results Nav -->
+                    <div class="flex-1 relative flex items-center gap-1 justify-end">
+                        <select id="search-results-right" onchange="jumpToSearchResult('right')" class="hidden w-full max-w-[200px] px-2 py-1 text-sm border border-blue-300 dark:border-blue-600 rounded-lg bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-semibold focus:outline-none"></select>
+                        <button id="btn-clear-right" onclick="clearSearch('right')" class="hidden px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-lg text-sm font-bold flex-shrink-0 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
-                        <button id="btn-snap-right" onclick="snapBack('right')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
+                        <button id="btn-snap-right" onclick="snapBack('right')" class="hidden px-2 py-1 bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-lg text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Back</button>
                     </div>
                 </div>
                 <div class="flex flex-col gap-1 mt-1">
@@ -396,9 +429,7 @@
         }
 
         if (navigator.storage && navigator.storage.persist) {
-            navigator.storage.persist().then((persistent) => {
-                if (persistent) console.log("Storage locked.");
-            });
+            navigator.storage.persist().then((persistent) => { if (persistent) console.log("Storage locked."); });
         }
 
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
@@ -407,7 +438,6 @@
         const myIndexFiles = [
             'book_maths-red.js',
             'book_maths-blue.js'
-            // Add more here! e.g., 'book_physics.js'
         ];
         // ⬆️ -------------------------------------------------------- ⬆️
 
@@ -432,11 +462,7 @@
         window.addEventListener('DOMContentLoaded', async () => {
             if (!window.isAppAuthorized) return; 
             applyTheme(); applyLayout();
-            try { 
-                await initDB(); 
-            } catch(e) {
-                console.error("DB Init error:", e);
-            }
+            try { await initDB(); } catch(e) { console.error("DB Init error:", e); }
             try {
                 const books = await refreshDropdown(); 
                 if (books.length > 0) toggleEmptyState(true, false); 
@@ -539,21 +565,14 @@
 
             if (appSettings.forceSingleView) { 
                 const toggleSV = document.getElementById('toggle-single-view');
-                if(toggleSV) {
-                    toggleSV.classList.replace('bg-slate-300', 'bg-blue-600'); 
-                    toggleSV.firstElementChild.classList.add('translate-x-6'); 
-                }
+                if(toggleSV) { toggleSV.classList.replace('bg-slate-300', 'bg-blue-600'); toggleSV.firstElementChild.classList.add('translate-x-6'); }
             } else { 
                 const toggleSV = document.getElementById('toggle-single-view');
-                if(toggleSV) {
-                    toggleSV.classList.replace('bg-blue-600', 'bg-slate-300'); 
-                    toggleSV.firstElementChild.classList.remove('translate-x-6'); 
-                }
+                if(toggleSV) { toggleSV.classList.replace('bg-blue-600', 'bg-slate-300'); toggleSV.firstElementChild.classList.remove('translate-x-6'); }
             }
             
             document.getElementById('setting-search-mode').value = appSettings.searchMode;
 
-            // SMART LANDSCAPE DETECTION
             const isMobilePortrait = window.innerWidth < 768 && window.matchMedia("(orientation: portrait)").matches;
 
             if (isMobilePortrait || appSettings.forceSingleView) {
@@ -599,9 +618,69 @@
         document.getElementById('toggle-single-view').addEventListener('click', () => { appSettings.forceSingleView = !appSettings.forceSingleView; saveSettings(); applyLayout(); });
         document.getElementById('setting-search-mode').addEventListener('change', (e) => { appSettings.searchMode = e.target.value; saveSettings(); });
         
-        document.getElementById('btn-mobile-menu').addEventListener('click', () => {
-            const controls = document.getElementById('header-controls'); controls.classList.toggle('hidden'); controls.classList.toggle('flex');
+        // Mobile Drawer Management
+        const drawer = document.getElementById('mobile-drawer');
+        const drawerOverlay = document.getElementById('mobile-drawer-overlay');
+
+        function openMobileDrawer() {
+            drawerOverlay.classList.remove('hidden');
+            setTimeout(() => { drawerOverlay.classList.remove('opacity-0'); drawer.classList.remove('-translate-x-full'); }, 10);
+        }
+
+        function closeMobileDrawer() {
+            drawerOverlay.classList.add('opacity-0'); drawer.classList.add('-translate-x-full');
+            setTimeout(() => { drawerOverlay.classList.add('hidden'); }, 200);
+        }
+
+        document.getElementById('btn-mobile-menu').addEventListener('click', openMobileDrawer);
+        document.getElementById('btn-close-drawer').addEventListener('click', closeMobileDrawer);
+        drawerOverlay.addEventListener('click', closeMobileDrawer);
+
+        // --- SMART SEARCH HUB LOGIC ---
+        window.openSearchHub = () => {
+            const overlay = document.getElementById('search-hub-overlay');
+            const modal = document.getElementById('search-hub-modal');
+            overlay.classList.remove('hidden');
+            
+            // Smart auto-select scope based on current view
+            const isSingleView = document.getElementById('main-container').classList.contains('single-view-mode');
+            if (isSingleView) {
+                document.querySelector(`input[name="searchScope"][value="${activePaneId}"]`).checked = true;
+            } else {
+                document.querySelector(`input[name="searchScope"][value="both"]`).checked = true;
+            }
+
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                modal.classList.remove('translate-y-full', 'md:translate-y-10', 'md:scale-95');
+                document.getElementById('hub-input').focus();
+            }, 10);
+        };
+
+        window.closeSearchHub = () => {
+            const overlay = document.getElementById('search-hub-overlay');
+            const modal = document.getElementById('search-hub-modal');
+            overlay.classList.add('opacity-0');
+            modal.classList.add('translate-y-full', 'md:translate-y-10', 'md:scale-95');
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        };
+
+        window.executeHubSearch = async () => {
+            const query = document.getElementById('hub-input').value.trim();
+            if (!query || !pdfDoc) return;
+            
+            const scope = document.querySelector('input[name="searchScope"]:checked').value;
+            closeSearchHub();
+
+            if (scope === 'left' || scope === 'both') await executeSearchAll('left', query);
+            if (scope === 'right' || scope === 'both') await executeSearchAll('right', query);
+            document.getElementById('hub-input').value = ''; 
+        };
+
+        document.getElementById('hub-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') executeHubSearch();
         });
+
 
         function showToast(message, type = 'info') {
             const container = document.getElementById('toast-container'); const toast = document.createElement('div');
@@ -635,11 +714,6 @@
             populateSettings(); 
             const modal = document.getElementById('modal-settings'); modal.classList.remove('hidden');
             setTimeout(() => { modal.classList.remove('opacity-0'); modal.firstElementChild.classList.remove('scale-95'); }, 10);
-            
-            // Cleanly close the mobile menu if open
-            if(window.innerWidth < 768) {
-                document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex');
-            }
         }
 
         function closeModal(id) {
@@ -648,7 +722,7 @@
 
         function toggleEmptyState(show, isCompletelyEmpty = false) {
             const overlay = document.getElementById('empty-state-overlay'); const msgEl = document.getElementById('empty-state-msg');
-            if (show) { overlay.classList.remove('hidden'); msgEl.textContent = isCompletelyEmpty ? "Your library is empty. Upload your first PDF." : "Please select a book."; } 
+            if (show) { overlay.classList.remove('hidden'); msgEl.textContent = isCompletelyEmpty ? "Your library is empty. Open the menu to upload your first PDF." : "Please select a book."; } 
             else { overlay.classList.add('hidden'); }
         }
 
@@ -687,13 +761,7 @@
             
             if (!file || !file.name.toLowerCase().endsWith('.pdf')) { 
                 showToast("Please select a valid PDF file.", "error"); 
-                e.target.value = '';
-                return; 
-            }
-            
-            // Cleanly close the mobile menu if open
-            if(window.innerWidth < 768) {
-                document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex');
+                e.target.value = ''; return; 
             }
             
             customPrompt(file.name.replace(/\.pdf$/i, ''), async (bookName) => {
@@ -933,59 +1001,14 @@
         setupPanZoom('left'); setupPanZoom('right');
 
         // --- 6. SEARCH ENGINES ---
-        function populateQuickJump() {
-            const dropdown = document.getElementById('quick-jump-dropdown');
-            dropdown.innerHTML = '<option value="">Quick Jump...</option>';
-            
-            if (currentBookIndex) {
-                dropdown.classList.remove('hidden');
-                for (const key of Object.keys(currentBookIndex)) {
-                    if (key === 'pageNumber') continue;
-                    const opt = document.createElement('option');
-                    opt.value = key; 
-                    opt.textContent = `Exercise ${key.toUpperCase()}`;
-                    dropdown.appendChild(opt);
-                }
-            } else {
-                dropdown.classList.add('hidden'); 
-            }
-        }
-
-        window.jumpToQuickIndex = function(key) {
-            if (!key || !pdfDoc || !currentBookIndex) return;
-            const ex = currentBookIndex[key];
-            
-            // Handles both {"q": X, "a": Y} AND {pages: [X, Y]}
-            const q = ex.pages ? ex.pages[0] : ex.q;
-            const a = ex.pages ? ex.pages[1] : ex.a;
-            
-            renderPage('left', q, 'keep'); 
-            if (a) renderPage('right', a, 'keep');
-            
-            document.getElementById('quick-jump-dropdown').selectedIndex = 0; 
-        };
-
-        async function executeGlobalSearch() {
-            const query = document.getElementById('search-global').value.trim(); if (!query || !pdfDoc) return;
-            document.getElementById('search-left').value = query; document.getElementById('search-right').value = query;
-            try { await executeSearchAll('left', query); await executeSearchAll('right', query); } catch(e){}
-            
-            // Close mobile menu if open
-            if(window.innerWidth < 768) {
-                document.getElementById('header-controls').classList.add('hidden'); document.getElementById('header-controls').classList.remove('flex');
-            }
-        }
-
         async function executeSearchAll(paneId, overrideQuery = null) {
             if (!pdfDoc || !currentBookId) return;
             const pane = panes[paneId]; 
-            const inputEl = document.getElementById(`search-${paneId}`);
             const selectEl = document.getElementById(`search-results-${paneId}`);
-            const btnSearch = document.getElementById(`btn-search-${paneId}`);
             const btnClear = document.getElementById(`btn-clear-${paneId}`);
             const statusEl = document.getElementById(`status-${paneId}`);
             
-            const rawQuery = (overrideQuery !== null ? overrideQuery : inputEl.value).trim().toLowerCase();
+            const rawQuery = overrideQuery.trim().toLowerCase();
             if (!rawQuery) { clearSearch(paneId); return; } 
             
             const searchMode = appSettings.searchMode;
@@ -999,17 +1022,13 @@
             if (searchMode === 'smart' || searchMode === 'index') {
                 if (!currentBookIndex && searchMode === 'index') {
                     statusEl.textContent = "No index linked."; 
-                    inputEl.disabled = false; btnSearch.disabled = false; 
                     return;
                 }
                 if (currentBookIndex && currentBookIndex[jsonKey]) {
                     const ex = currentBookIndex[jsonKey];
-                    // Support both specific format {"q": 14, "a": 255} AND old pages[] format safely
                     const targetPage = (paneId === 'left') ? (ex.q || ex.pages[0]) : (ex.a || ex.pages[1] || ex.q);
                     
                     renderPage(paneId, targetPage, 'keep');
-                    inputEl.disabled = false;
-                    btnSearch.disabled = false;
                     statusEl.textContent = "⚡ Match";
                     
                     statusEl.classList.add('opacity-50');
@@ -1017,14 +1036,13 @@
                     return;
                 } else if (searchMode === 'index') {
                     statusEl.textContent = "Not in index."; 
-                    inputEl.disabled = false; btnSearch.disabled = false; 
                     return;
                 }
             }
             
             /* --- 2. DEEP PDF TEXT SCAN --- */
             if (searchMode === 'smart' || searchMode === 'text') {
-                inputEl.disabled = true; btnSearch.disabled = true; statusEl.textContent = "Scanning...";
+                statusEl.textContent = "Scanning...";
                 
                 let startPage = 1;
                 if (document.getElementById(`answers-only-${paneId}`)?.checked) {
@@ -1081,22 +1099,21 @@
                             selectEl.appendChild(opt);
                         });
                         
-                        inputEl.classList.add('hidden'); btnSearch.classList.add('hidden'); 
                         selectEl.classList.remove('hidden'); btnClear.classList.remove('hidden');
                         pane.previousPage = pane.pageNum; document.getElementById(`btn-snap-${paneId}`).classList.remove('hidden');
                         jumpToSearchResult(paneId, JSON.stringify(results[0])); selectEl.selectedIndex = 1;
                     } else { 
-                        statusEl.textContent = "No matches."; inputEl.disabled = false; btnSearch.disabled = false; 
+                        statusEl.textContent = "No matches.";
                     }
-                } catch (err) { statusEl.textContent = "Error."; inputEl.disabled = false; btnSearch.disabled = false; }
+                } catch (err) { statusEl.textContent = "Error."; }
             }
         }
 
         function clearSearch(paneId) {
-            document.getElementById(`search-${paneId}`).classList.remove('hidden'); document.getElementById(`search-${paneId}`).disabled = false; document.getElementById(`search-${paneId}`).value = '';
-            document.getElementById(`btn-search-${paneId}`).classList.remove('hidden'); document.getElementById(`btn-search-${paneId}`).disabled = false;
-            document.getElementById(`search-results-${paneId}`).classList.add('hidden'); document.getElementById(`btn-clear-${paneId}`).classList.add('hidden');
-            document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); document.getElementById(`status-${paneId}`).textContent = '';
+            document.getElementById(`search-results-${paneId}`).classList.add('hidden');
+            document.getElementById(`btn-clear-${paneId}`).classList.add('hidden');
+            document.getElementById(`btn-snap-${paneId}`).classList.add('hidden');
+            document.getElementById(`status-${paneId}`).textContent = '';
             panes[paneId].searchTarget = null; panes[paneId].previousPage = null;
         }
 
@@ -1109,8 +1126,6 @@
         window.snapBack = (paneId) => {
             if (panes[paneId].previousPage) { renderPage(paneId, panes[paneId].previousPage, appSettings.defaultZoom); document.getElementById(`btn-snap-${paneId}`).classList.add('hidden'); }
         };
-
-        ['left', 'right'].forEach(paneId => { document.getElementById(`search-${paneId}`).addEventListener('keypress', (e) => { if (e.key === 'Enter') executeSearchAll(paneId); }); });
 
         // --- 7. SETTINGS LIBRARY MANAGER ---
         async function populateSettings() {
