@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chris.PDF v2</title>
+    
+    <!-- Native OS PWA Hooks (Kills the black screen) -->
+    <meta name="theme-color" content="#0f172a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Chris.PDF">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-startup-image" href="./splash.png">
+    <link rel="apple-touch-icon" href="./icon.png">
     
     <!-- Theme Variables (Defaults to Blue) -->
     <style id="theme-vars">
@@ -108,9 +115,21 @@
     </div>
 
     <script>
+        // Start a timer the moment the browser reads this line
+        const splashStartTime = Date.now();
+        const MIN_SPLASH_TIME = 1500; // 1.5 seconds minimum (exactly one full wave animation)
+
         window.addEventListener('load', () => {
             const splash = document.getElementById('app-splash');
-            if(splash) { splash.style.opacity = '0'; setTimeout(() => splash.remove(), 500); }
+            if(splash) {
+                const timeElapsed = Date.now() - splashStartTime;
+                const timeRemaining = Math.max(0, MIN_SPLASH_TIME - timeElapsed);
+                
+                setTimeout(() => {
+                    splash.style.opacity = '0'; 
+                    setTimeout(() => splash.remove(), 500);
+                }, timeRemaining);
+            }
         });
 
         // --- SECURITY LOCKDOWN ---
@@ -295,7 +314,7 @@
         </div>
     </div>
 
-    <!-- SETTINGS MODAL WITH COLOR THEMES -->
+    <!-- SETTINGS MODAL -->
     <div id="modal-settings" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 flex items-center justify-center hidden opacity-0 transition-opacity duration-200 px-4">
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl border border-slate-200 dark:border-slate-700 transform scale-95 transition-transform duration-200 flex flex-col max-h-[90vh]">
             <div class="p-4 md:p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center flex-shrink-0">
@@ -477,8 +496,6 @@
             navigator.storage.persist().then((persistent) => { if (persistent) console.log("Storage locked."); });
         }
 
-        
-
         // ⬇️ ADD ALL YOUR SEPARATE JAVASCRIPT INDEX FILE NAMES HERE ⬇️
         const myIndexFiles = [
             'book_maths-red.js',
@@ -526,8 +543,8 @@
         };
 
         window.addEventListener('DOMContentLoaded', async () => {
+            // Tell the app to link the PDF engine ONLY AFTER the DOM is fully loaded and downloading has started
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-
             
             if (!window.isAppAuthorized) return; 
             if (!appSettings.themeColor) appSettings.themeColor = 'blue';
