@@ -1,79 +1,97 @@
-// Version 7: Pre-Cache + Safe Stale-While-Revalidate
-const CACHE_NAME = 'chris-pdf-v7'; 
+// Version 8: Bulletproof Offline PDF Worker & SWR
+const CACHE_NAME = 'chris-pdf-v8'; 
 
-// 1. Files we GUARANTEE are downloaded and saved the second the app installs
-const PRECACHE_URLS = [
+// 1. Local files we need instantly (Stale-While-Revalidate)
+const PRECACHE_LOCAL = [
     './',
     './index.html',
     './splash.png',
     './manifest.json',
     './icon.png',
-    // Force the cache to hold your index files permanently
     './indices/book_maths-red.js',
-    './indices/book_maths-blue.js',
-    // Force the cache to hold the PDF engine so it never hangs
+    './indices/book_maths-blue.js'
+];
+
+// 2. External libraries (Strict Cache-First + CORS enforcement)
+const PRECACHE_CDN = [
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
     'https://cdn.tailwindcss.com'
 ];
 
-// 2. Install & Download Pre-Cache
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // Download everything in the list. 
-            // We use Promise.allSettled so if one file typos, it doesn't kill the whole app.
+            // Cache local files normally
+            cache.addAll(PRECACHE_LOCAL);
+            
+            // Force strict CORS mode on CDNs so the PDF worker is allowed to boot offline
             return Promise.allSettled(
-                PRECACHE_URLS.map(url => fetch(url).then(res => cache.put(url, res)))
+                PRECACHE_CDN.map(url => 
+                    fetch(new Request(url, { mode: 'cors' }))
+                    .then(res => {
+                        if (res.ok) cache.put(url, res);
+                    }).catch(err => console.log('CDN Precache skipped:', url))
+                )
             );
         })
     );
 });
 
-// 3. Activate & Clean Old Caches
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cache) => {
-                    if (cache !== CACHE_NAME) {
-                        console.log('SW: Purging old cache', cache);
-                        return caches.delete(cache);
-                    }
+                    if (cache !== CACHE_NAME) return caches.delete(cache);
                 })
             );
         }).then(() => self.clients.claim())
     );
 });
 
-// 4. Safe SWR Fetch Engine
 self.addEventListener('fetch', (event) => {
-    // ONLY intercept standard GET requests (ignores POSTs, extensions, etc.)
     if (event.request.method !== 'GET') return;
     if (!event.request.url.startsWith('http')) return;
-
-    // NEVER intercept range requests (PDFs use these if streamed from the web)
     if (event.request.headers.get('range')) return;
 
+    const url = new URL(event.request.url);
+
+    // STRATEGY A: External CDNs (Cache-First)
+    if (url.origin !== location.origin) {
+        event.respondWith(
+            // ignoreSearch and ignoreVary guarantee we don't miss the cached file due to random URL parameters
+            caches.match(event.request, { ignoreSearch: true, ignoreVary: true }).then((cachedResponse) => {
+                if (cachedResponse) return cachedResponse;
+                
+                return fetch(event.request).then((networkResponse) => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const clone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+                    }
+                    return networkResponse;
+                }).catch(() => { /* Offline, do nothing */ });
+            })
+        );
+        return;
+    }
+
+    // STRATEGY B: Local App Files (Stale-While-Revalidate)
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            
-            // The background update task
+        caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
             const fetchPromise = fetch(event.request).then((networkResponse) => {
-                // Only save valid responses (status 200, or 0 for opaque CDNs)
-                // This prevents the SW from accidentally caching a 404 error page
-                if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+                if (networkResponse && networkResponse.status === 200) {
                     const clone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return networkResponse;
-            }).catch((err) => {
-                // Offline. Do nothing, rely on cache.
-            });
+            }).catch(() => { /* Offline, fallback to cache */ });
 
-            // Return the instant cache if we have it, otherwise wait for the network
-            return cachedResponse || fetchPromise;
+            return cachedResponse || fetchPromise.then(res => {
+                if (!res) throw new Error("Offline and file not cached");
+                return res;
+            });
         })
     );
 });
