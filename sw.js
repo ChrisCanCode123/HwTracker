@@ -1,5 +1,5 @@
 // Version 8: Bulletproof Offline PDF Worker & SWR
-const CACHE_NAME = 'chris-pdf-v8'; 
+const CACHE_NAME = 'chris-pdf-v9'; 
 
 // 1. Local files we need instantly (Stale-While-Revalidate)
 const PRECACHE_LOCAL = [
@@ -16,7 +16,8 @@ const PRECACHE_LOCAL = [
 const PRECACHE_CDN = [
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
-    'https://cdn.tailwindcss.com'
+    'https://cdn.tailwindcss.com',
+    'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
