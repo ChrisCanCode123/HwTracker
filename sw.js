@@ -1,5 +1,5 @@
-// Version 13: Opaque CDN Support (Fixes White Screen CSS Crash)
-const CACHE_NAME = 'Cache-v3'; 
+// Version 14: Fixed Race Conditions and Opaque Quota Bloat
+const CACHE_NAME = 'Cache-v4'; 
 
 const PRECACHE_LOCAL = [
     './',
@@ -24,16 +24,13 @@ self.addEventListener('install', (event) => {
         caches.open(CACHE_NAME).then((cache) => {
             const localPromises = PRECACHE_LOCAL.map(url => 
                 fetch(url).then(res => {
-                    if (res.ok) cache.put(url, res);
+                    if (res.ok) return cache.put(url, res);
                 }).catch(err => console.log('Skipped local file:', url))
             );
 
             const cdnPromises = PRECACHE_CDN.map(url => 
-                // Allow "no-cors" so Tailwind and Fonts don't get blocked
-                fetch(new Request(url, { mode: 'no-cors' }))
-                .then(res => {
-                    // Force the cache to accept opaque (status 0) responses
-                    if (res.ok || res.type === 'opaque' || res.status === 0) cache.put(url, res);
+                fetch(url).then(res => {
+                    if (res.ok) return cache.put(url, res);
                 }).catch(err => console.log('Skipped CDN file:', url))
             );
 
@@ -67,8 +64,7 @@ self.addEventListener('fetch', (event) => {
                 if (cachedResponse) return cachedResponse;
                 
                 return fetch(event.request).then((networkResponse) => {
-                    // Accept status 0 here as well for background CSS updates
-                    if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0 || networkResponse.type === 'opaque')) {
+                    if (networkResponse && networkResponse.status === 200) {
                         const clone = networkResponse.clone();
                         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                     }
