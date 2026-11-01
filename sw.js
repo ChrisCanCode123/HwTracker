@@ -1,15 +1,15 @@
-// Version 8: Bulletproof Offline PDF Worker & SWR
-const CACHE_NAME = 'Cache-v1'; 
+// Version 12: Fault-Tolerant Installer & Bulletproof Offline PDF Worker
+const CACHE_NAME = 'Cache-v2'; 
 
 // 1. Local files we need instantly (Stale-While-Revalidate)
 const PRECACHE_LOCAL = [
     './',
     './index.html',
-    './splash.png',
     './manifest.json',
     './icon.png',
     './indices/book_maths-red.js',
-    './indices/book_maths-blue.js'
+    './indices/book_maths-blue.js',
+    './indices/physics.js'
 ];
 
 // 2. External libraries (Strict Cache-First + CORS enforcement)
@@ -24,18 +24,24 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // Cache local files normally
-            cache.addAll(PRECACHE_LOCAL);
             
-            // Force strict CORS mode on CDNs so the PDF worker is allowed to boot offline
-            return Promise.allSettled(
-                PRECACHE_CDN.map(url => 
-                    fetch(new Request(url, { mode: 'cors' }))
-                    .then(res => {
-                        if (res.ok) cache.put(url, res);
-                    }).catch(err => console.log('CDN Precache skipped:', url))
-                )
+            // Safely cache local files (ignores 404s without crashing the whole install)
+            const localPromises = PRECACHE_LOCAL.map(url => 
+                fetch(url).then(res => {
+                    if (res.ok) cache.put(url, res);
+                }).catch(err => console.log('Skipped local file:', url))
             );
+
+            // Safely cache external CDNs with strict CORS enforcement
+            const cdnPromises = PRECACHE_CDN.map(url => 
+                fetch(new Request(url, { mode: 'cors' }))
+                .then(res => {
+                    if (res.ok) cache.put(url, res);
+                }).catch(err => console.log('Skipped CDN file:', url))
+            );
+
+            // Execute all downloads independently
+            return Promise.allSettled([...localPromises, ...cdnPromises]);
         })
     );
 });
