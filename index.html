@@ -135,7 +135,7 @@
         // --- SECURITY LOCKDOWN ---
         window.isAppAuthorized = false; 
         const INSTALL_PIN = "5566";  
-        const APP_PASSCODE = "8288"; 
+        const APP_PASSCODE = "8288s"; 
         const DEV_OVERRIDE = "admin123"; 
         
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
@@ -145,12 +145,12 @@
 
         window.checkPin = function() {
             const input = document.getElementById('pin-input').value;
-            if (input === APP_PASSCODE) { localStorage.setItem('chris_pdf_authorized', 'true'); location.reload(); } 
+            if (input === APP_PASSCODE) { localStorage.setItem('chris_pdf_authorizedv2', 'true'); location.reload(); } 
             else { alert('Incorrect access code.'); }
         };
 
         window.devUnlock = function(password) {
-            if (password === DEV_OVERRIDE) { sessionStorage.setItem('chris_dev_mode', 'true'); localStorage.setItem('chris_pdf_authorized', 'true'); location.reload(); return "Unlocking app..."; }
+            if (password === DEV_OVERRIDE) { sessionStorage.setItem('chris_dev_mode', 'true'); localStorage.setItem('chris_pdf_authorizedv2', 'true'); location.reload(); return "Unlocking app..."; }
             return "Incorrect password.";
         };
 
