@@ -58,9 +58,11 @@ self.addEventListener('fetch', (event) => {
 
     const url = new URL(event.request.url);
 
+    // Cross-origin (CDNs)
     if (url.origin !== location.origin) {
         event.respondWith(
-            caches.match(event.request, { ignoreSearch: true, ignoreVary: true }).then((cachedResponse) => {
+            // Removed ignoreSearch and ignoreVary to safely match exact CDN queries
+            caches.match(event.request).then((cachedResponse) => {
                 if (cachedResponse) return cachedResponse;
                 
                 return fetch(event.request).then((networkResponse) => {
@@ -75,19 +77,19 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    // Local files (Cache-First strategy)
     event.respondWith(
         caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
+            if (cachedResponse) return cachedResponse; // Return cache immediately without background fetching
+
+            return fetch(event.request).then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
                     const clone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return networkResponse;
-            }).catch(() => { /* Offline */ });
-
-            return cachedResponse || fetchPromise.then(res => {
-                if (!res) throw new Error("Offline and file not cached");
-                return res;
+            }).catch(() => { 
+                throw new Error("Offline and file not cached"); 
             });
         })
     );
