@@ -115,42 +115,29 @@
     </div>
 
     <script>
-        // Start a timer the moment the browser reads this line
-        const splashStartTime = Date.now();
-        const MIN_SPLASH_TIME = 1500; // 1.5 seconds minimum (exactly one full wave animation)
-
-        window.addEventListener('load', () => {
-            const splash = document.getElementById('app-splash');
-            if(splash) {
-                const timeElapsed = Date.now() - splashStartTime;
-                const timeRemaining = Math.max(0, MIN_SPLASH_TIME - timeElapsed);
-                
-                setTimeout(() => {
-                    splash.style.opacity = '0'; 
-                    setTimeout(() => splash.remove(), 500);
-                }, timeRemaining);
-            }
-        });
-
         // --- SECURITY LOCKDOWN ---
         window.isAppAuthorized = false; 
         const INSTALL_PIN = "5566";  
         const APP_PASSCODE = "7788"; 
         const DEV_OVERRIDE = "admin123"; 
         
+        // Change this key whenever you want to force a global logout
+        const AUTH_KEY = 'chris_pdf_authorized_v2'; 
+        
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         const urlParams = new URLSearchParams(window.location.search);
         const urlPin = urlParams.get('pin');
-        const isDevMode = sessionStorage.getItem('chris_dev_mode') === 'true';
+        const isLocalhost = ['localhost', '127.0.0.1', ''].includes(window.location.hostname);
+        const isDevMode = sessionStorage.getItem('chris_dev_mode') === 'true' || isLocalhost;
 
         window.checkPin = function() {
             const input = document.getElementById('pin-input').value;
-            if (input === APP_PASSCODE) { localStorage.setItem('chris_pdf_authorized', 'true'); location.reload(); } 
+            if (input === APP_PASSCODE) { localStorage.setItem(AUTH_KEY, 'true'); location.reload(); } 
             else { alert('Incorrect access code.'); }
         };
 
         window.devUnlock = function(password) {
-            if (password === DEV_OVERRIDE) { sessionStorage.setItem('chris_dev_mode', 'true'); localStorage.setItem('chris_pdf_authorized', 'true'); location.reload(); return "Unlocking app..."; }
+            if (password === DEV_OVERRIDE) { sessionStorage.setItem('chris_dev_mode', 'true'); localStorage.setItem(AUTH_KEY, 'true'); location.reload(); return "Unlocking app..."; }
             return "Incorrect password.";
         };
 
@@ -165,7 +152,9 @@
             }
         } else {
             if (urlPin) { window.history.replaceState({}, document.title, window.location.pathname); }
-            if (localStorage.getItem('chris_pdf_authorized') === 'true') { window.isAppAuthorized = true; } 
+            
+            // Check for the NEW key version
+            if (localStorage.getItem(AUTH_KEY) === 'true') { window.isAppAuthorized = true; } 
             else {
                 document.write(`<style>body > *:not(.lock-screen) { display: none !important; }</style><div class="lock-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f1f5f9;font-family:sans-serif;"><h2 style="margin-bottom: 10px;">App Locked</h2><p style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Enter your client passcode to unlock your device.</p><input type="password" id="pin-input" style="padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; text-align: center; margin-bottom: 16px; font-size: 18px; width: 220px;" placeholder="Enter Passcode"><button onclick="window.checkPin()" style="padding: 12px 24px; border-radius: 8px; background: var(--primary-500); color: white; border: none; font-weight: bold; cursor: pointer; width: 220px; transition: background 0.2s;">Unlock App</button></div>`);
                 window.stop();

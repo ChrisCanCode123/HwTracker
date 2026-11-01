@@ -1,5 +1,5 @@
 // Version 8: Bulletproof Offline PDF Worker & SWR
-const CACHE_NAME = 'chris-pdf-v9'; 
+const CACHE_NAME = 'Cache-v1'; 
 
 // 1. Local files we need instantly (Stale-While-Revalidate)
 const PRECACHE_LOCAL = [
