@@ -165,7 +165,7 @@
             }
         } else {
             if (urlPin) { window.history.replaceState({}, document.title, window.location.pathname); }
-            if (localStorage.getItem('chris_pdf_authorized') === 'true') { window.isAppAuthorized = true; } 
+            if (localStorage.getItem('chris_pdf_authorizedv2') === 'true') { window.isAppAuthorized = true; } 
             else {
                 document.write(`<style>body > *:not(.lock-screen) { display: none !important; }</style><div class="lock-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f1f5f9;font-family:sans-serif;"><h2 style="margin-bottom: 10px;">App Locked</h2><p style="margin-bottom: 24px; color: #94a3b8; font-size: 14px;">Enter your client passcode to unlock your device.</p><input type="password" id="pin-input" style="padding: 12px; border-radius: 8px; border: 1px solid #334155; background: #1e293b; color: white; text-align: center; margin-bottom: 16px; font-size: 18px; width: 220px;" placeholder="Enter Passcode"><button onclick="window.checkPin()" style="padding: 12px 24px; border-radius: 8px; background: var(--primary-500); color: white; border: none; font-weight: bold; cursor: pointer; width: 220px; transition: background 0.2s;">Unlock App</button></div>`);
                 window.stop();
