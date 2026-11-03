@@ -43,13 +43,9 @@
         @keyframes lineLoad { 0% { left: -50%; } 100% { left: 100%; } }
     </style>
 
-    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-    
-    <!-- ⬇ ADD YOUR SEPARATE INDEX FILES HERE ⬇ -->
-    <script src="./indices/book_maths-red.js"></script>
-    <script src="./indices/book_maths-blue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <!-- ⬆ ---------------------------------- ⬆ -->
 
     <script>
@@ -488,8 +484,9 @@
 
     <script>
         if ('serviceWorker' in navigator) { 
-            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); }); 
-            navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+            window.addEventListener('load', () => { 
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW failed: ', err)); 
+            }); 
         }
 
         if (navigator.storage && navigator.storage.persist) {
@@ -758,9 +755,11 @@
             if (masterIndex.length > 0) return; 
             for (const file of myIndexFiles) {
                 await new Promise(resolve => {
-                    const script = document.createElement('script'); script.src = `./indices/${file}?v=${Date.now()}`;
+                    const script = document.createElement('script'); 
+                    script.src = `./indices/${file}`; // Removed ?v=Date.now() so offline cache hits cleanly
                     script.onload = () => { if (window.tempIndex) { masterIndex.push(window.tempIndex); window.tempIndex = null; } script.remove(); resolve(); };
-                    script.onerror = () => { script.remove(); resolve(); }; document.head.appendChild(script);
+                    script.onerror = () => { script.remove(); resolve(); }; 
+                    document.head.appendChild(script);
                 });
             }
         }
