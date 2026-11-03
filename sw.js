@@ -1,7 +1,6 @@
-// Version 8: Bulletproof Offline PDF Worker & SWR
-const CACHE_NAME = 'pdf-v9b'; 
+// Version 10: Fixed Offline PWA & Redirects
+const CACHE_NAME = 'pdf-v10'; 
 
-// 1. Local files we need instantly (Stale-While-Revalidate)
 const PRECACHE_LOCAL = [
     './',
     './index.html',
@@ -11,28 +10,30 @@ const PRECACHE_LOCAL = [
     './indices/book_maths-blue.js'
 ];
 
-// 2. External libraries (Strict Cache-First + CORS enforcement)
+// Use the direct versioned Tailwind URL to avoid 302 redirect caching bugs
 const PRECACHE_CDN = [
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js',
-    'https://cdn.tailwindcss.com',
+    'https://cdn.tailwindcss.com/3.4.16',
     'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            // Cache local files normally
-            cache.addAll(PRECACHE_LOCAL);
+        caches.open(CACHE_NAME).then(async (cache) => {
+            // 1. Wait for local files to actually finish caching
+            await Promise.allSettled(
+                PRECACHE_LOCAL.map(url => cache.add(url).catch(err => console.warn('Local Precache failed:', url)))
+            );
             
-            // Force strict CORS mode on CDNs so the PDF worker is allowed to boot offline
-            return Promise.allSettled(
+            // 2. Cache CDNs
+            await Promise.allSettled(
                 PRECACHE_CDN.map(url => 
                     fetch(new Request(url, { mode: 'cors' }))
                     .then(res => {
-                        if (res.ok) cache.put(url, res);
-                    }).catch(err => console.log('CDN Precache skipped:', url))
+                        if (res.ok) return cache.put(url, res);
+                    }).catch(err => console.warn('CDN Precache skipped:', url))
                 )
             );
         })
@@ -59,19 +60,18 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
     // STRATEGY A: External CDNs (Cache-First)
-    if (url.origin !== location.origin) {
+    if (url.origin !== self.location.origin) {
         event.respondWith(
-            // ignoreSearch and ignoreVary guarantee we don't miss the cached file due to random URL parameters
             caches.match(event.request, { ignoreSearch: true, ignoreVary: true }).then((cachedResponse) => {
                 if (cachedResponse) return cachedResponse;
                 
                 return fetch(event.request).then((networkResponse) => {
-                    if (networkResponse && networkResponse.status === 200) {
+                    if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
                         const clone = networkResponse.clone();
                         caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                     }
                     return networkResponse;
-                }).catch(() => { /* Offline, do nothing */ });
+                }).catch(() => new Response('', { status: 408, statusText: 'Offline' }));
             })
         );
         return;
@@ -86,11 +86,14 @@ self.addEventListener('fetch', (event) => {
                     caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
                 }
                 return networkResponse;
-            }).catch(() => { /* Offline, fallback to cache */ });
+            }).catch(() => null);
 
             return cachedResponse || fetchPromise.then(res => {
-                if (!res) throw new Error("Offline and file not cached");
-                return res;
+                // Fallback to index.html if navigating offline
+                if (!res && event.request.mode === 'navigate') {
+                    return caches.match('./index.html');
+                }
+                return res || new Response('', { status: 408, statusText: 'Offline' });
             });
         })
     );
